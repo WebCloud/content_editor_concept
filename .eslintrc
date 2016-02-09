@@ -1,0 +1,13 @@
+{
+  "extends": "airbnb",
+  "parser": "babel-eslint",
+  "rules": {
+    "comma-dangle": [2, "never"],
+    "generator-star-spacing": [2, {"before": true, "after": false}],
+    "strict": [2, "global"],
+    "arrow-body-style": [2, "as-needed"]
+  },
+  "ecmaFeatures": {
+    "generators": true
+  }
+}
