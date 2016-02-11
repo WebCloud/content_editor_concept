@@ -9,5 +9,13 @@ const style = `
 </style>`;
 
 const markup = '<div class="image-plugin">Here will be some image</div>';
+const pluginEvents = [
+  {
+    eventName: 'click',
+    eventHander() {
+      console.info('called');
+    }
+  }
+];
 
-export default new PluginFactory({ name: 'image', markup, style });
+export default new PluginFactory({ name: 'image', markup, style, pluginEvents });
