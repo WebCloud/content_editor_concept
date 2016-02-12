@@ -7,7 +7,7 @@ import { render } from 'react-dom';
 const template = `
 <div>
 {content.image {className: 'some-class-other', width: '10em'}}
-{content.text}
+{content.text {headingLevel: 'h4'}}
 </div>
 `;
 

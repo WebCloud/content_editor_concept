@@ -6,30 +6,33 @@ const style = {
 };
 
 function clickEventHandler() {
-  this.setState({ editMode: !this.state.editMode })
+  this.setState({ editMode: !this.state.editMode });
+}
+
+function handleInput({ key, target: { value: text } }) {
+  if (key === 'Enter') this.setState({ editMode: false, text });
 }
 
 export default class TextPlugin extends Component {
   static propTypes = {
-    className: PropTypes.string
+    className: PropTypes.string,
+    headingLevel: PropTypes.string
   };
 
   constructor(props) {
     super(props);
     this.clickEventHandler = clickEventHandler.bind(this);
-    this.state = { text: 'Here will be some text', editMode: false };
+    this.handleInput = handleInput.bind(this);
+    this.state = { text: 'Here will be some heading text', editMode: false };
   }
 
-  parseContent(classNames) {
-    let parsedContent = (
-      <h1 style={style} className={classNames} onClick={this.clickEventHandler}>
-        { this.state.text }
-      </h1>
-    );
+  parseContent() {
+    const props = { onClick: this.clickEventHandler };
+    let parsedContent = React.createElement(this.props.headingLevel, props, this.state.text);
 
     if (this.state.editMode) {
       parsedContent = (
-        <input type="text" placeholder="Here will be some text" />
+        <input type="text" placeholder={this.state.text} onKeyUp={this.handleInput} />
       );
     }
 
@@ -40,8 +43,8 @@ export default class TextPlugin extends Component {
     const { className = '' } = this.props;
     const classNames = `text-plugin ${className}`;
 
-    return (<div>
-      {this.parseContent(classNames)}
+    return (<div className={ classNames } style={ style }>
+      {this.parseContent()}
     </div>);
   }
 }
