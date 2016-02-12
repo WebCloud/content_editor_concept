@@ -1,8 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 
 const style = {
-  padding: '1em',
-  border: 'dashed 2px #acacac'
+  border: 'dashed 2px #acacac',
+  padding: '0 1em',
+  display: 'inline-block'
 };
 
 function clickEventHandler() {

@@ -2,7 +2,9 @@ import React from 'react';
 
 const style = {
   padding: '1em',
-  border: 'dashed 2px #acacac'
+  border: 'dashed 2px #acacac',
+  display: 'inline-block',
+  margin: '0em 1em 1em 0em'
 };
 
 function clickEventHandler() {
