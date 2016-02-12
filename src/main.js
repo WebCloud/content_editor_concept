@@ -4,21 +4,27 @@ import { Parser } from './js/parser';
 import React from 'react';
 import { render } from 'react-dom';
 
-const style = {
-  display: 'flex',
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  alignItems: 'flex-start'
-};
+const style = `
+div.outter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+`;
 
 const template = `
-<div>
-{content.image {className: 'some-class-other', width: '10em'}}
-{content.text {headingLevel: 'h4'}}
+<div class="outter">
+  {content.image {className: 'some-class-other', width: '10em'}}
+  {content.text {headingLevel: 'h4', className: 'a-text'}}
 </div>
 `;
 
 render(
-  React.createElement('div', { style }, Parser.getChildrenNodes(template)),
+  React.createElement(
+    'div',
+    null,
+    Parser.getChildrenNodes({ template: template.replace(/\n|(\s{1,}(?=<))/g, ''), style })
+  ),
   document.querySelector('.editor')
 );

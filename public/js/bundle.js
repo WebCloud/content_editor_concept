@@ -60,16 +60,11 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	var style = {
-	  display: 'flex',
-	  flexDirection: 'row',
-	  flexWrap: 'wrap',
-	  alignItems: 'flex-start'
-	};
+	var style = '\ndiv.outter {\n  display: flex;\n  flex-direction: row;\n  flex-wrap: wrap;\n  align-items: flex-start;\n}\n';
 	
-	var template = '\n<div>\n{content.image {className: \'some-class-other\', width: \'10em\'}}\n{content.text {headingLevel: \'h4\'}}\n</div>\n';
+	var template = '\n<div class="outter">\n  {content.image {className: \'some-class-other\', width: \'10em\'}}\n  {content.text {headingLevel: \'h4\', className: \'a-text\'}}\n</div>\n';
 	
-	(0, _reactDom.render)(_react2.default.createElement('div', { style: style }, _parser.Parser.getChildrenNodes(template)), document.querySelector('.editor'));
+	(0, _reactDom.render)(_react2.default.createElement('div', null, _parser.Parser.getChildrenNodes({ template: template.replace(/\n|(\s{1,}(?=<))/g, ''), style: style })), document.querySelector('.editor'));
 
 /***/ },
 /* 1 */
@@ -5361,35 +5356,77 @@
 	var propsRegEX = /\{(\w+:\s?('|")?\w+((-|_)\w+){0,}('|")?(,)?\s?){1,}\}/g;
 	
 	var Parser = {
-	  getChildrenNodes: function getChildrenNodes(template) {
-	    var pluginList = this.getPlugins(template);
-	    var childrenNodes = pluginList.map(function (_ref, index) {
-	      var pluginName = _ref.pluginName;
-	      var props = _ref.props;
-	      return _react2.default.createElement(__webpack_require__(349)("./" + pluginName + '-plugin').default, Object.assign({ key: pluginName + '-' + index }, props));
-	    });
+	  getChildrenNodes: function getChildrenNodes(_ref) {
+	    var template = _ref.template;
+	    var style = _ref.style;
 	
-	    return childrenNodes;
+	    var node = document.createElement('div');
+	    node.innerHTML = template;
+	
+	    return this.parseNodes({ node: node, style: style });
 	  },
-	  getPlugins: function getPlugins(template) {
-	    var editableParts = template.match(pluginRegEx);
-	    var pluginMatches = editableParts.map(function (entry) {
-	      var unparsedProps = entry.match(propsRegEX);
-	      var props = {};
+	  parseNodes: function parseNodes(_ref2) {
+	    var _this = this;
 	
-	      if (unparsedProps !== null) {
-	        props = JSON.parse(unparsedProps[0].replace(/\w+:/g, function (match) {
-	          return '"' + match.split(':')[0] + '":';
-	        }).replace(/'/g, '"'));
+	    var _ref2$node$childNodes = _ref2.node.childNodes;
+	    var childNodes = _ref2$node$childNodes === undefined ? [] : _ref2$node$childNodes;
+	    var style = _ref2.style;
+	
+	    var nodeList = [];
+	
+	    childNodes.forEach(function (node, index) {
+	      if (typeof node.tagName === 'undefined') {
+	        nodeList = nodeList.concat(_this.extractPlugins(node.textContent));
+	      } else {
+	        var tagName = node.tagName;
+	        var className = node.className;
+	
+	        var key = '' + tagName + index + node.parentNode.tagName + Math.random();
+	        var childrenList = null;
+	
+	        if (node.hasChildNodes()) {
+	          childrenList = _this.parseNodes({ node: node });
+	        }
+	
+	        if (typeof style !== 'undefined') {
+	          nodeList.push(_react2.default.createElement('style', { key: 'main-style' }, style));
+	        }
+	
+	        nodeList.push(_react2.default.createElement(tagName.toLowerCase(), { className: className, key: key }, childrenList));
 	      }
-	
-	      return {
-	        pluginName: entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0],
-	        props: props
-	      };
 	    });
 	
-	    return pluginMatches;
+	    return nodeList;
+	  },
+	  extractPlugins: function extractPlugins(node) {
+	    var editableParts = node.match(pluginRegEx);
+	    var matches = [];
+	
+	    if (editableParts !== null) {
+	      matches = editableParts.map(function (entry) {
+	        var unparsedProps = entry.match(propsRegEX);
+	        var props = {};
+	
+	        if (unparsedProps !== null) {
+	          props = JSON.parse(unparsedProps[0].replace(/\w+:/g, function (match) {
+	            return '"' + match.split(':')[0] + '":';
+	          }).replace(/'/g, '"'));
+	        }
+	
+	        return {
+	          pluginName: entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0],
+	          props: props
+	        };
+	      }).map(function (_ref3, index) {
+	        var pluginName = _ref3.pluginName;
+	        var props = _ref3.props;
+	        return _react2.default.createElement(__webpack_require__(349)("./" + pluginName + '-plugin').default, Object.assign({ key: pluginName + '-' + index + Math.random() }, props));
+	      });
+	    } else {
+	      matches = [node];
+	    }
+	
+	    return matches;
 	  }
 	};
 	
