@@ -1,21 +1,19 @@
-import PluginFactory from './plugin-factory';
+import React from 'react';
 
-const style = `
-<style>
-  .image-plugin {
-    padding: 1em;
-    border: dashed 2px #acacac;
-  }
-</style>`;
+const style = {
+  padding: '1em',
+  border: 'dashed 2px #acacac'
+};
 
-const markup = '<div class="image-plugin">Here will be some image</div>';
-const pluginEvents = [
-  {
-    eventName: 'click',
-    eventHander() {
-      console.info('called');
-    }
-  }
-];
+function clickEventHandler() {
+  console.info('clicked');
+}
 
-export default new PluginFactory({ name: 'image', markup, style, pluginEvents });
+export default function ImagePlugin({ className = '', width = 'auto', height = width }) {
+  const pluginStyle = Object.assign({}, style, { width, height });
+  const classNames = `image-plugin ${className}`;
+
+  return (<div style={pluginStyle} className={classNames} onClick={clickEventHandler}>
+    Here will be some image
+  </div>);
+}
