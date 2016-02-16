@@ -5,6 +5,12 @@ const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?
 // RegEx for the plugin props part on the plugin syntax, using JSON-like values
 const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
 
+// Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
+// function, in order to get the markdown content out of the Parser plugins
+const pluginMap = {
+  pluginMarkdownMap: ['']
+};
+
 const Parser = {
   getChildrenNodes({ template, style }) {
     // Transform the template into a DOM tree in order to better transverse it
@@ -92,6 +98,17 @@ const Parser = {
     }
 
     return matches;
+  },
+
+  mapPluginMarkdown(markdown, pluginIndex) {
+    this.pluginMarkdownMap[pluginIndex] = markdown;
+  },
+
+  // Handler function to be called from the ContentEditor in order to extract the
+  // markdown out of the Parser plugin instances
+  previewHandler() {
+    alert(pluginMap.pluginMarkdownMap.join('\n'));
+    return pluginMap.pluginMarkdownMap;
   }
 };
 
