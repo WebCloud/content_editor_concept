@@ -1,9 +1,9 @@
 import React from 'react';
 
 // RegEx for the plugin syntax: {content.pluginName {pluginProp: 'propValue'}}
-const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_)\w+){0,}('|")?(,)?\s?){1,}\})?\}/g;
+const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\})?\}/g;
 // RegEx for the plugin props part on the plugin syntax, using JSON-like values
-const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_)\w+){0,}('|")?(,)?\s?){1,}\}/g;
+const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
 
 const Parser = {
   getChildrenNodes({ template, style }) {
