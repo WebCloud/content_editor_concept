@@ -65,6 +65,8 @@ const Parser = {
     let matches = [];
 
     if (editableParts !== null) {
+      const pluginIndex = pluginMap.pluginMarkdownMap.length;
+
       // If we find plugin matches map them into React Elements on a two part step
       matches = editableParts.map((entry) => {
         // Check for the presence of props passed to the plugin syntax
@@ -89,9 +91,19 @@ const Parser = {
         // Require the React component and create a new React element with it
         React.createElement(
           require(`./plugins/${pluginName}-plugin`).default,
-          Object.assign({ key: `${pluginName}-${index}${Math.random()}` }, props)
+          Object.assign({
+            key: `${pluginName}-${index}${Math.random()}`,
+            pluginIndex,
+            // Bind the mapPluginMarkdown to get a new funtion where the closure will
+            // have the pluginMap object as scope for us to extract the markdown content
+            getMarkdown: this.mapPluginMarkdown.bind(pluginMap)
+          }, props)
         )
       ));
+
+      // Add a new empty string to represent a default markdown string for each plugin
+      // instance
+      pluginMap.pluginMarkdownMap.push('');
     } else {
       // If no plugin syntax is found, simply return the text
       matches = [node];
@@ -100,6 +112,9 @@ const Parser = {
     return matches;
   },
 
+  // Function to be used as a model for the getMarkdown prop for each Parser plugin instance
+  // it will be bound to the pluginMap in order to easily get the plugin markdown content into
+  // the ContentEditor
   mapPluginMarkdown(markdown, pluginIndex) {
     this.pluginMarkdownMap[pluginIndex] = markdown;
   },

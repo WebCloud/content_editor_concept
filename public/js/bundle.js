@@ -52,11 +52,15 @@
 	
 	var _parser = __webpack_require__(192);
 	
+	var _contentEditor = __webpack_require__(352);
+	
+	var _contentEditor2 = _interopRequireDefault(_contentEditor);
+	
 	var _react = __webpack_require__(193);
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _reactDom = __webpack_require__(352);
+	var _reactDom = __webpack_require__(353);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -64,7 +68,7 @@
 	
 	var template = '\n<div class="outter">\n  {content.image {className: \'some-class-other\', width: \'10em\'}}\n  {content.text {headingLevel: \'h4\', className: \'a-text\'}}\n</div>\n';
 	
-	(0, _reactDom.render)(_react2.default.createElement('div', null, _parser.Parser.getChildrenNodes({ template: template.replace(/\n|(\s{1,}(?=<))/g, ''), style: style })), document.querySelector('.editor'));
+	(0, _reactDom.render)(_react2.default.createElement(_contentEditor2.default, { previewHandler: _parser.Parser.previewHandler }, _parser.Parser.getChildrenNodes({ template: template.replace(/\n|(\s{1,}(?=<))/g, ''), style: style })), document.querySelector('.editor'));
 
 /***/ },
 /* 1 */
@@ -5352,17 +5356,30 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	var pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_)\w+){0,}('|")?(,)?\s?){1,}\})?\}/g;
-	var propsRegEX = /\{(\w+:\s?('|")?\w+((-|_)\w+){0,}('|")?(,)?\s?){1,}\}/g;
+	// RegEx for the plugin syntax: {content.pluginName {pluginProp: 'propValue'}}
+	var pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\})?\}/g;
+	// RegEx for the plugin props part on the plugin syntax, using JSON-like values
+	var propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
+	
+	// Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
+	// function, in order to get the markdown content out of the Parser plugins
+	var pluginMap = {
+	  pluginMarkdownMap: ['']
+	};
 	
 	var Parser = {
 	  getChildrenNodes: function getChildrenNodes(_ref) {
 	    var template = _ref.template;
 	    var style = _ref.style;
 	
+	    // Transform the template into a DOM tree in order to better transverse it
+	    // and transform it into React elements to be rendered into the screen
+	
 	    var node = document.createElement('div');
 	    node.innerHTML = template;
 	
+	    // Call parseNodes in order to transform the childNodes into React Elements
+	    // or into Parser plugin instances. Return the parsed nodes to be rendered.
 	    return this.parseNodes({ node: node, style: style });
 	  },
 	  parseNodes: function parseNodes(_ref2) {
@@ -5375,7 +5392,12 @@
 	    var nodeList = [];
 	
 	    childNodes.forEach(function (node, index) {
+	      // Ff the node has no tagName it indicates that it is a text, it could be
+	      // just a text or a snippet for the plugin syntax e.g: {content.image ...}
 	      if (typeof node.tagName === 'undefined') {
+	        // Call extractPlugins to check for snippets for the plugin syntax.
+	        // Receive in return an array of node lists to be concatenated into our
+	        // current node list.
 	        nodeList = nodeList.concat(_this.extractPlugins(node.textContent));
 	      } else {
 	        var tagName = node.tagName;
@@ -5384,10 +5406,14 @@
 	        var key = '' + tagName + index + node.parentNode.tagName + Math.random();
 	        var childrenList = null;
 	
+	        // If we have childNodes call parseNodes on the node to keep trasversing
+	        // and parsing the tree. Receive the result into a array, childrenList
 	        if (node.hasChildNodes()) {
 	          childrenList = _this.parseNodes({ node: node });
 	        }
 	
+	        // If we have style defined to be used, create a style tag for inline
+	        // styling the component
 	        if (typeof style !== 'undefined') {
 	          nodeList.push(_react2.default.createElement('style', { key: 'main-style' }, style));
 	        }
@@ -5399,34 +5425,77 @@
 	    return nodeList;
 	  },
 	  extractPlugins: function extractPlugins(node) {
+	    var _this2 = this;
+	
+	    // Receive any matches for the plugin syntax
 	    var editableParts = node.match(pluginRegEx);
 	    var matches = [];
 	
 	    if (editableParts !== null) {
-	      matches = editableParts.map(function (entry) {
-	        var unparsedProps = entry.match(propsRegEX);
-	        var props = {};
+	      (function () {
+	        var pluginIndex = pluginMap.pluginMarkdownMap.length;
 	
-	        if (unparsedProps !== null) {
-	          props = JSON.parse(unparsedProps[0].replace(/\w+:/g, function (match) {
-	            return '"' + match.split(':')[0] + '":';
-	          }).replace(/'/g, '"'));
-	        }
+	        // If we find plugin matches map them into React Elements on a two part step
+	        matches = editableParts.map(function (entry) {
+	          // Check for the presence of props passed to the plugin syntax
+	          var unparsedProps = entry.match(propsRegEX);
+	          var props = {};
 	
-	        return {
-	          pluginName: entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0],
-	          props: props
-	        };
-	      }).map(function (_ref3, index) {
-	        var pluginName = _ref3.pluginName;
-	        var props = _ref3.props;
-	        return _react2.default.createElement(__webpack_require__(349)("./" + pluginName + '-plugin').default, Object.assign({ key: pluginName + '-' + index + Math.random() }, props));
-	      });
+	          if (unparsedProps !== null) {
+	            // If we receive, normalize it into a JSON string to then parse it into
+	            // a JSON object.
+	            props = JSON.parse(unparsedProps[0].replace(/\w+:/g, function (match) {
+	              return '"' + match.split(':')[0] + '":';
+	            }).replace(/'/g, '"'));
+	          }
+	
+	          // Return an object with the pluginName and the props to be used to
+	          // require the React component
+	          return {
+	            pluginName: entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0],
+	            props: props
+	          };
+	        }).map(function (_ref3, index) {
+	          var pluginName = _ref3.pluginName;
+	          var props = _ref3.props;
+	          return(
+	            // Require the React component and create a new React element with it
+	            _react2.default.createElement(__webpack_require__(349)("./" + pluginName + '-plugin').default, Object.assign({
+	              key: pluginName + '-' + index + Math.random(),
+	              pluginIndex: pluginIndex,
+	              // Bind the mapPluginMarkdown to get a new funtion where the closure will
+	              // have the pluginMap object as scope for us to extract the markdown content
+	              getMarkdown: _this2.mapPluginMarkdown.bind(pluginMap)
+	            }, props))
+	          );
+	        });
+	
+	        // Add a new empty string to represent a default markdown string for each plugin
+	        // instance
+	        pluginMap.pluginMarkdownMap.push('');
+	      })();
 	    } else {
+	      // If no plugin syntax is found, simply return the text
 	      matches = [node];
 	    }
 	
 	    return matches;
+	  },
+	
+	
+	  // Function to be used as a model for the getMarkdown prop for each Parser plugin instance
+	  // it will be bound to the pluginMap in order to easily get the plugin markdown content into
+	  // the ContentEditor
+	  mapPluginMarkdown: function mapPluginMarkdown(markdown, pluginIndex) {
+	    this.pluginMarkdownMap[pluginIndex] = markdown;
+	  },
+	
+	
+	  // Handler function to be called from the ContentEditor in order to extract the
+	  // markdown out of the Parser plugin instances
+	  previewHandler: function previewHandler() {
+	    alert(pluginMap.pluginMarkdownMap.join('\n'));
+	    return pluginMap.pluginMarkdownMap;
 	  }
 	};
 	
@@ -25033,7 +25102,15 @@
 	  var key = _ref.key;
 	  var text = _ref.target.value;
 	
-	  if (key === 'Enter') this.setState({ editMode: false, text: text });
+	  if (key === 'Enter') {
+	    var headingLevel = this.props.headingLevel.match(/\d$/)[0];
+	    var markdownHeading = '';
+	    for (var i = 0; i < headingLevel; i++) {
+	      markdownHeading += '#';
+	    }
+	    this.props.getMarkdown(markdownHeading + ' ' + text, this.props.pluginIndex);
+	    this.setState({ editMode: false, text: text, markdown: markdownHeading + ' ' + text });
+	  }
 	}
 	
 	var TextPlugin = function (_Component) {
@@ -25046,7 +25123,9 @@
 	
 	    _this.clickEventHandler = clickEventHandler.bind(_this);
 	    _this.handleInput = handleInput.bind(_this);
-	    _this.state = { text: 'Here will be some heading text', editMode: false };
+	    var text = _this.props.placeholderText;
+	
+	    _this.state = { text: text || 'Here will be some heading text', editMode: false };
 	    return _this;
 	  }
 	
@@ -25061,6 +25140,11 @@
 	      }
 	
 	      return parsedContent;
+	    }
+	  }, {
+	    key: 'shoudComponentUpdate',
+	    value: function shoudComponentUpdate(previousState, nextState) {
+	      return previousState.editMode !== nextState.editMode;
 	    }
 	  }, {
 	    key: 'render',
@@ -25083,12 +25167,73 @@
 	
 	TextPlugin.propTypes = {
 	  className: _react.PropTypes.string,
-	  headingLevel: _react.PropTypes.string
+	  headingLevel: _react.PropTypes.string,
+	  placeholderText: _react.PropTypes.string
 	};
 	exports.default = TextPlugin;
 
 /***/ },
 /* 352 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(193);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var ContentEditor = function (_Component) {
+	  _inherits(ContentEditor, _Component);
+	
+	  function ContentEditor() {
+	    _classCallCheck(this, ContentEditor);
+	
+	    return _possibleConstructorReturn(this, Object.getPrototypeOf(ContentEditor).apply(this, arguments));
+	  }
+	
+	  _createClass(ContentEditor, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'button',
+	          { onClick: this.props.previewHandler },
+	          'Preview'
+	        ),
+	        ' ',
+	        _react2.default.createElement('br', null),
+	        this.props.children
+	      );
+	    }
+	  }]);
+	
+	  return ContentEditor;
+	}(_react.Component);
+	
+	ContentEditor.propTypes = {
+	  children: _react.PropTypes.node,
+	  previewHandler: _react.PropTypes.func
+	};
+	exports.default = ContentEditor;
+
+/***/ },
+/* 353 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

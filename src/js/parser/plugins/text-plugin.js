@@ -11,20 +11,30 @@ function clickEventHandler() {
 }
 
 function handleInput({ key, target: { value: text } }) {
-  if (key === 'Enter') this.setState({ editMode: false, text });
+  if (key === 'Enter') {
+    const headingLevel = this.props.headingLevel.match(/\d$/)[0];
+    let markdownHeading = '';
+    for (let i = 0; i < headingLevel; i++) {
+      markdownHeading += '#';
+    }
+    this.props.getMarkdown(`${markdownHeading} ${text}`, this.props.pluginIndex);
+    this.setState({ editMode: false, text, markdown: `${markdownHeading} ${text}` });
+  }
 }
 
 export default class TextPlugin extends Component {
   static propTypes = {
     className: PropTypes.string,
-    headingLevel: PropTypes.string
+    headingLevel: PropTypes.string,
+    placeholderText: PropTypes.string
   };
 
   constructor(props) {
     super(props);
     this.clickEventHandler = clickEventHandler.bind(this);
     this.handleInput = handleInput.bind(this);
-    this.state = { text: 'Here will be some heading text', editMode: false };
+    const { placeholderText: text } = this.props;
+    this.state = { text: text || 'Here will be some heading text', editMode: false };
   }
 
   parseContent() {
@@ -38,6 +48,10 @@ export default class TextPlugin extends Component {
     }
 
     return parsedContent;
+  }
+
+  shoudComponentUpdate(previousState, nextState) {
+    return previousState.editMode !== nextState.editMode;
   }
 
   render() {
