@@ -11,9 +11,12 @@ function clickEventHandler() {
   console.info('clicked');
 }
 
-export default function ImagePlugin({ className = '', width = 'auto', height = width }) {
+export default function ImagePlugin(props) {
+  const { className = '', width = 'auto', height = width, getMarkdown, pluginIndex } = props;
   const pluginStyle = Object.assign({}, style, { width, height });
   const classNames = `image-plugin ${className}`;
+
+  getMarkdown('![deadpool](http://i.imgur.com/wXpNi4T.gif)', pluginIndex);
 
   return (<div style={pluginStyle} className={classNames} onClick={clickEventHandler}>
     Here will be some image

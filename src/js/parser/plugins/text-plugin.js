@@ -10,14 +10,21 @@ function clickEventHandler() {
   this.setState({ editMode: !this.state.editMode });
 }
 
+function getMarkdownHeading(headingLevel) {
+  let markdownHeading = '';
+
+  for (let i = 0; i < headingLevel; i++) {
+    markdownHeading += '#';
+  }
+
+  return markdownHeading;
+}
+
 function handleInput({ key, target: { value: text } }) {
   if (key === 'Enter') {
     const headingLevel = this.props.headingLevel.match(/\d$/)[0];
-    let markdownHeading = '';
-    for (let i = 0; i < headingLevel; i++) {
-      markdownHeading += '#';
-    }
-    this.props.getMarkdown(`${markdownHeading} ${text}`, this.props.pluginIndex);
+    const markdownHeading = getMarkdownHeading(headingLevel);
+
     this.setState({ editMode: false, text, markdown: `${markdownHeading} ${text}` });
   }
 }
@@ -26,15 +33,21 @@ export default class TextPlugin extends Component {
   static propTypes = {
     className: PropTypes.string,
     headingLevel: PropTypes.string,
-    placeholderText: PropTypes.string
+    placeholderText: PropTypes.string,
+    pluginIndex: PropTypes.number,
+    getMarkdown: PropTypes.func
   };
 
   constructor(props) {
     super(props);
     this.clickEventHandler = clickEventHandler.bind(this);
     this.handleInput = handleInput.bind(this);
-    const { placeholderText: text } = this.props;
-    this.state = { text: text || 'Here will be some heading text', editMode: false };
+
+    const { placeholderText: text = 'Here will be some heading text' } = this.props;
+    const headingLevel = this.props.headingLevel.match(/\d$/)[0];
+    const markdown = `${getMarkdownHeading(headingLevel)} ${text}`;
+
+    this.state = { text, editMode: false, markdown };
   }
 
   parseContent() {
@@ -55,8 +68,11 @@ export default class TextPlugin extends Component {
   }
 
   render() {
-    const { className = '' } = this.props;
+    const { className = '', pluginIndex } = this.props;
+    const { markdown } = this.state;
     const classNames = `text-plugin ${className}`;
+
+    this.props.getMarkdown(markdown, pluginIndex);
 
     return (<div className={ classNames } style={ style }>
       {this.parseContent()}
