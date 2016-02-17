@@ -1,9 +1,16 @@
 import React from 'react';
+import marked from 'marked';
 
 // RegEx for the plugin syntax: {content.pluginName {pluginProp: 'propValue'}}
-const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\})?\}/g;
+const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\})?\}/g; // eslint-disable-line max-len
 // RegEx for the plugin props part on the plugin syntax, using JSON-like values
 const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
+
+// Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
+// function, in order to get the markdown content out of the Parser plugins
+const pluginMarkdownMap = [];
+
+let originalTemplate = '';
 
 const Parser = {
   getChildrenNodes({ template, style }) {
@@ -12,6 +19,7 @@ const Parser = {
 
     const node = document.createElement('div');
     node.innerHTML = template;
+    originalTemplate = template;
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
@@ -61,6 +69,11 @@ const Parser = {
     if (editableParts !== null) {
       // If we find plugin matches map them into React Elements on a two part step
       matches = editableParts.map((entry) => {
+        // Add a new empty string to represent a default markdown string for each plugin
+        // instance
+        pluginMarkdownMap.push('');
+        const pluginIndex = pluginMarkdownMap.length - 1;
+
         // Check for the presence of props passed to the plugin syntax
         const unparsedProps = entry.match(propsRegEX);
         let props = {};
@@ -77,13 +90,19 @@ const Parser = {
         // require the React component
         return {
           pluginName: entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0],
-          props
+          props,
+          pluginIndex
         };
-      }).map(({ pluginName, props }, index) => (
+      }).map(({ pluginName, props, pluginIndex }, index) => (
         // Require the React component and create a new React element with it
         React.createElement(
           require(`./plugins/${pluginName}-plugin`).default,
-          Object.assign({ key: `${pluginName}-${index}${Math.random()}` }, props)
+          Object.assign({
+            key: `${pluginName}-${index}${Math.random()}`,
+            pluginIndex,
+            // Pass the mapPluginMarkdown to index the markdown content
+            getMarkdown: this.mapPluginMarkdown
+          }, props)
         )
       ));
     } else {
@@ -92,6 +111,24 @@ const Parser = {
     }
 
     return matches;
+  },
+
+  // Function to be used as a model for the getMarkdown prop for each Parser plugin instance
+  // into the ContentEditor
+  mapPluginMarkdown(markdown, pluginIndex) {
+    pluginMarkdownMap[pluginIndex] = markdown;
+  },
+
+  // Handler function to be called from the ContentEditor in order to extract the
+  // markdown out of the Parser plugin instances
+  previewHandler() {
+    let pluginIndex = 0;
+    return originalTemplate.replace(pluginRegEx, () => {
+      const replacement = pluginMarkdownMap[pluginIndex];
+      pluginIndex++;
+
+      return marked(replacement);
+    });
   }
 };
 

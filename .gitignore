@@ -1,4 +1,7 @@
-dist/
+public/css/bundle.css
+public/css/bundle.css.map
+public/js/bundle.js
+public/js/bundle.js.map
 node_modules/
 bower_components/
 .DS_Store
