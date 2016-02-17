@@ -5363,9 +5363,7 @@
 	
 	// Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
 	// function, in order to get the markdown content out of the Parser plugins
-	var pluginMap = {
-	  pluginMarkdownMap: ['']
-	};
+	var pluginMarkdownMap = [''];
 	
 	var Parser = {
 	  getChildrenNodes: function getChildrenNodes(_ref) {
@@ -5433,7 +5431,7 @@
 	
 	    if (editableParts !== null) {
 	      (function () {
-	        var pluginIndex = pluginMap.pluginMarkdownMap.length;
+	        var pluginIndex = pluginMarkdownMap.length;
 	
 	        // If we find plugin matches map them into React Elements on a two part step
 	        matches = editableParts.map(function (entry) {
@@ -5463,16 +5461,15 @@
 	            _react2.default.createElement(__webpack_require__(349)("./" + pluginName + '-plugin').default, Object.assign({
 	              key: pluginName + '-' + index + Math.random(),
 	              pluginIndex: pluginIndex,
-	              // Bind the mapPluginMarkdown to get a new funtion where the closure will
-	              // have the pluginMap object as scope for us to extract the markdown content
-	              getMarkdown: _this2.mapPluginMarkdown.bind(pluginMap)
+	              // Pass the mapPluginMarkdown to index the markdown content
+	              getMarkdown: _this2.mapPluginMarkdown
 	            }, props))
 	          );
 	        });
 	
 	        // Add a new empty string to represent a default markdown string for each plugin
 	        // instance
-	        pluginMap.pluginMarkdownMap.push('');
+	        pluginMarkdownMap.push('');
 	      })();
 	    } else {
 	      // If no plugin syntax is found, simply return the text
@@ -5484,18 +5481,17 @@
 	
 	
 	  // Function to be used as a model for the getMarkdown prop for each Parser plugin instance
-	  // it will be bound to the pluginMap in order to easily get the plugin markdown content into
-	  // the ContentEditor
+	  // into the ContentEditor
 	  mapPluginMarkdown: function mapPluginMarkdown(markdown, pluginIndex) {
-	    this.pluginMarkdownMap[pluginIndex] = markdown;
+	    pluginMarkdownMap[pluginIndex] = markdown;
 	  },
 	
 	
 	  // Handler function to be called from the ContentEditor in order to extract the
 	  // markdown out of the Parser plugin instances
 	  previewHandler: function previewHandler() {
-	    alert(pluginMap.pluginMarkdownMap.join('\n'));
-	    return pluginMap.pluginMarkdownMap;
+	    alert(pluginMarkdownMap.join('\n'));
+	    return pluginMarkdownMap;
 	  }
 	};
 	
