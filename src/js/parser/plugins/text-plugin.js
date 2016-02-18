@@ -35,7 +35,8 @@ export default class TextPlugin extends Component {
     headingLevel: PropTypes.string,
     placeholderText: PropTypes.string,
     pluginIndex: PropTypes.number,
-    getMarkdown: PropTypes.func
+    getMarkdown: PropTypes.func,
+    isPreviewing: PropTypes.bool
   };
 
   constructor(props) {
@@ -68,13 +69,16 @@ export default class TextPlugin extends Component {
   }
 
   render() {
-    const { className = '', pluginIndex } = this.props;
+    const { className = '', pluginIndex, isPreviewing } = this.props;
     const { markdown } = this.state;
     const classNames = `text-plugin ${className}`;
+    const pluginStyle = Object.assign({}, style, {
+      border: ((isPreviewing) ? 'none' : style.border)
+    });
 
-    this.props.getMarkdown(markdown, pluginIndex);
+    this.props.getMarkdown({ markdown, pluginIndex });
 
-    return (<div className={ classNames } style={ style }>
+    return (<div className={ classNames } style={ pluginStyle }>
       {this.parseContent()}
     </div>);
   }
