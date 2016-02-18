@@ -1,6 +1,5 @@
 import './styles/main.scss';
 import 'babel-polyfill';
-import { Parser } from './js/parser';
 import ContentEditor from './js/content-editor';
 import React from 'react';
 import { render } from 'react-dom';
@@ -22,10 +21,6 @@ const template = `
 `;
 
 render(
-  React.createElement(
-    ContentEditor,
-    { previewHandler: Parser.previewHandler },
-    Parser.getChildrenNodes({ template: template.replace(/\n|(\s{1,}(?=<))/g, ''), style })
-  ),
+  <ContentEditor template={ template } componentsStyle={ style } />,
   document.querySelector('.editor')
 );

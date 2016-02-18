@@ -10,48 +10,50 @@ const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
 // function, in order to get the markdown content out of the Parser plugins
 const pluginMarkdownMap = [];
 
-let originalTemplate = '';
-
 const Parser = {
-  getChildrenNodes({ template, style }) {
+  getChildrenNodes({ template, style, isPreviewing }) {
     // Transform the template into a DOM tree in order to better transverse it
     // and transform it into React elements to be rendered into the screen
 
     const node = document.createElement('div');
     node.innerHTML = template;
-    originalTemplate = template;
+    const nodeId = '0';
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
-    return this.parseNodes({ node, style });
+    return this.parseNodes({ node, style, isPreviewing, nodeId });
   },
 
-  parseNodes({ node: { childNodes = [] }, style }) {
+  parseNodes({ node: { childNodes = [] }, style, isPreviewing, nodeId }) {
     let nodeList = [];
 
     childNodes.forEach((node, index) => {
+      const childNodeId = `${nodeId}-${index}`;
       // Ff the node has no tagName it indicates that it is a text, it could be
       // just a text or a snippet for the plugin syntax e.g: {content.image ...}
       if (typeof node.tagName === 'undefined') {
         // Call extractPlugins to check for snippets for the plugin syntax.
         // Receive in return an array of node lists to be concatenated into our
         // current node list.
-        nodeList = nodeList.concat(this.extractPlugins(node.textContent));
+        const textContent = node.textContent;
+        nodeList = nodeList.concat(
+          this.extractPlugins({ textContent, isPreviewing, nodeId: childNodeId })
+        );
       } else {
         const { tagName, className } = node;
-        const key = `${tagName}${index}${node.parentNode.tagName}${Math.random()}`;
+        const key = `${childNodeId}-${tagName}`;
         let childrenList = null;
 
         // If we have childNodes call parseNodes on the node to keep trasversing
         // and parsing the tree. Receive the result into a array, childrenList
         if (node.hasChildNodes()) {
-          childrenList = this.parseNodes({ node });
+          childrenList = this.parseNodes({ node, isPreviewing, nodeId: childNodeId });
         }
 
         // If we have style defined to be used, create a style tag for inline
         // styling the component
         if (typeof style !== 'undefined') {
-          nodeList.push(React.createElement('style', { key: 'main-style' }, style));
+          nodeList.push(React.createElement('style', { key: `${childNodeId}-style` }, style));
         }
 
         nodeList.push(React.createElement(tagName.toLowerCase(), { className, key }, childrenList));
@@ -61,9 +63,9 @@ const Parser = {
     return nodeList;
   },
 
-  extractPlugins(node) {
+  extractPlugins({ textContent, isPreviewing, nodeId }) {
     // Receive any matches for the plugin syntax
-    const editableParts = node.match(pluginRegEx);
+    const editableParts = textContent.match(pluginRegEx);
     let matches = [];
 
     if (editableParts !== null) {
@@ -98,16 +100,17 @@ const Parser = {
         React.createElement(
           require(`./plugins/${pluginName}-plugin`).default,
           Object.assign({
-            key: `${pluginName}-${index}${Math.random()}`,
+            key: `${nodeId}-${pluginName}-${index}`,
             pluginIndex,
             // Pass the mapPluginMarkdown to index the markdown content
-            getMarkdown: this.mapPluginMarkdown
+            getMarkdown: this.mapPluginMarkdown,
+            isPreviewing
           }, props)
         )
       ));
     } else {
       // If no plugin syntax is found, simply return the text
-      matches = [node];
+      matches = [textContent];
     }
 
     return matches;
@@ -115,20 +118,8 @@ const Parser = {
 
   // Function to be used as a model for the getMarkdown prop for each Parser plugin instance
   // into the ContentEditor
-  mapPluginMarkdown(markdown, pluginIndex) {
+  mapPluginMarkdown({ markdown, pluginIndex }) {
     pluginMarkdownMap[pluginIndex] = markdown;
-  },
-
-  // Handler function to be called from the ContentEditor in order to extract the
-  // markdown out of the Parser plugin instances
-  previewHandler() {
-    let pluginIndex = 0;
-    return originalTemplate.replace(pluginRegEx, () => {
-      const replacement = pluginMarkdownMap[pluginIndex];
-      pluginIndex++;
-
-      return marked(replacement);
-    });
   }
 };
 

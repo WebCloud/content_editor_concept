@@ -72,7 +72,7 @@ export default class TextPlugin extends Component {
     const { markdown } = this.state;
     const classNames = `text-plugin ${className}`;
 
-    this.props.getMarkdown(markdown, pluginIndex);
+    this.props.getMarkdown({ markdown, pluginIndex });
 
     return (<div className={ classNames } style={ style }>
       {this.parseContent()}
