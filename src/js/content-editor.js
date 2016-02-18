@@ -19,6 +19,11 @@ export default class ContentEditor extends Component {
     this.setState({ isPreviewing });
   }
 
+  compileTemplate() {
+    const { template } = this.props;
+    Parser.compileTemplate({ template });
+  }
+
   render() {
     const { template, componentsStyle: style } = this.props;
     const { isPreviewing } = this.state;

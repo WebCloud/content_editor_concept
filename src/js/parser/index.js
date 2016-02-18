@@ -120,6 +120,19 @@ const Parser = {
   // into the ContentEditor
   mapPluginMarkdown({ markdown, pluginIndex }) {
     pluginMarkdownMap[pluginIndex] = markdown;
+  },
+
+  // Compiles the template by matching the plugin matches with the pluginRegEx and
+  // parsing their Markdown content with marked
+  compileTemplate({ template }) {
+    let pluginIndex = 0;
+
+    return template.replace(pluginRegEx, () => {
+      const replacement = pluginMarkdownMap[pluginIndex];
+      pluginIndex++;
+
+      return marked(replacement);
+    });
   }
 };
 
