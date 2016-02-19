@@ -1,10 +1,11 @@
 import React, { Component, PropTypes } from 'react';
+import { baseStyles, basePropTypes } from './base-plugin';
 
-const style = {
-  border: 'dashed 2px #acacac',
-  padding: '0 1em',
-  display: 'inline-block'
-};
+const style = Object.assign({}, baseStyles, { padding: '0 1em' });
+const pluginProptypes = Object.assign({
+  headingLevel: PropTypes.string,
+  placeholderText: PropTypes.string
+}, basePropTypes);
 
 function clickEventHandler() {
   this.setState({ editMode: !this.state.editMode });
@@ -30,14 +31,7 @@ function handleInput({ key, target: { value: text } }) {
 }
 
 export default class TextPlugin extends Component {
-  static propTypes = {
-    className: PropTypes.string,
-    headingLevel: PropTypes.string,
-    placeholderText: PropTypes.string,
-    pluginIndex: PropTypes.number,
-    getMarkdown: PropTypes.func,
-    isPreviewing: PropTypes.bool
-  };
+  static propTypes = pluginProptypes;
 
   constructor(props) {
     super(props);

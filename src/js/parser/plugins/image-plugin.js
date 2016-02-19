@@ -1,21 +1,14 @@
 import React, { Component, PropTypes } from 'react';
+import { baseStyles, basePropTypes } from './base-plugin';
 
-const style = {
-  padding: '1em',
-  border: 'dashed 2px #acacac',
-  display: 'inline-block',
-  margin: '0em 1em 1em 0em'
-};
+const style = Object.assign({}, baseStyles, { margin: '0em 1em 1em 0em' });
+const pluginProptypes = Object.assign({
+  width: PropTypes.string,
+  height: PropTypes.string
+}, basePropTypes);
 
 export default class ImagePlugin extends Component {
-  static propTypes = {
-    className: PropTypes.string,
-    width: PropTypes.string,
-    height: PropTypes.string,
-    pluginIndex: PropTypes.number,
-    getMarkdown: PropTypes.func,
-    isPreviewing: PropTypes.bool
-  };
+  static propTypes = pluginProptypes;
 
   constructor(props) {
     super(props);
