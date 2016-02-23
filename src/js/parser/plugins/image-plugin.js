@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { baseStyles, basePropTypes } from './base-plugin';
+import { baseStyles, basePropTypes, baseStateVariables } from './base-plugin';
 
 const style = Object.assign({}, baseStyles, { margin: '0em 1em 1em 0em' });
 const pluginProptypes = Object.assign({
