@@ -70,7 +70,7 @@ export default class TextPlugin extends Component {
       border: ((isPreviewing) ? 'none' : style.border)
     });
 
-    this.props.getMarkdown({ markdown, pluginIndex });
+    this.props.getData({ markdown, pluginIndex });
 
     return (<div className={ classNames } style={ pluginStyle }>
       {this.parseContent()}

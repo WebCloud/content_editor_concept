@@ -122,10 +122,11 @@ export default class ImagePlugin extends Component {
   render() {
     const {
       className = '',
-      getMarkdown,
+      getData,
       pluginIndex,
       isPreviewing
     } = this.props;
+    const { pluginData, isDragging } = this.state;
     const classNames = `image-plugin ${className}`;
     const markdown = `![](${this.state.imageURL})`;
     const pluginStyle = Object.assign({}, style, {
@@ -133,6 +134,7 @@ export default class ImagePlugin extends Component {
     });
 
     getMarkdown({ markdown, pluginIndex });
+    getData({ markdown, pluginIndex, pluginData });
 
     return (
       <div style={pluginStyle} className={classNames} onClick={this.clickHandler}>
