@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { baseStyles, basePropTypes } from './base-plugin';
+import { baseStyles, basePropTypes, baseStateVariables } from './base-plugin';
 
 const style = Object.assign({}, baseStyles, { padding: '0 1em' });
 const pluginProptypes = Object.assign({
@@ -42,7 +42,7 @@ export default class TextPlugin extends Component {
     const headingLevel = this.props.headingLevel.match(/\d$/)[0];
     const markdown = `${getMarkdownHeading(headingLevel)} ${text}`;
 
-    this.state = { text, editMode: false, markdown };
+    this.state = Object.assign({ text, markdown }, baseStateVariables);
   }
 
   parseContent() {
@@ -70,7 +70,7 @@ export default class TextPlugin extends Component {
       border: ((isPreviewing) ? 'none' : style.border)
     });
 
-    this.props.getMarkdown({ markdown, pluginIndex });
+    this.props.getData({ markdown, pluginIndex });
 
     return (<div className={ classNames } style={ pluginStyle }>
       {this.parseContent()}

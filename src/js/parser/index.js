@@ -8,7 +8,7 @@ const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
 
 // Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
 // function, in order to get the markdown content out of the Parser plugins
-const pluginMarkdownMap = [];
+const pluginDataMap = [];
 
 const Parser = {
   getChildrenNodes({ template, style, isPreviewing }) {
@@ -73,8 +73,8 @@ const Parser = {
       matches = editableParts.map((entry) => {
         // Add a new empty string to represent a default markdown string for each plugin
         // instance
-        pluginMarkdownMap.push('');
-        const pluginIndex = pluginMarkdownMap.length - 1;
+        pluginDataMap.push('');
+        const pluginIndex = pluginDataMap.length - 1;
 
         // Check for the presence of props passed to the plugin syntax
         const unparsedProps = entry.match(propsRegEX);
@@ -103,7 +103,7 @@ const Parser = {
             key: `${nodeId}-${pluginName}-${index}`,
             pluginIndex,
             // Pass the mapPluginMarkdown to index the markdown content
-            getMarkdown: this.mapPluginMarkdown,
+            getData: this.mapPluginData,
             isPreviewing
           }, props)
         )
@@ -116,10 +116,10 @@ const Parser = {
     return matches;
   },
 
-  // Function to be used as a model for the getMarkdown prop for each Parser plugin instance
+  // Function to be used as a model for the getData prop for each Parser plugin instance
   // into the ContentEditor
-  mapPluginMarkdown({ markdown, pluginIndex }) {
-    pluginMarkdownMap[pluginIndex] = markdown;
+  mapPluginData({ markdown, pluginIndex, pluginData }) {
+    pluginDataMap[pluginIndex] = { markdown, pluginData };
   },
 
   // Compiles the template by matching the plugin matches with the pluginRegEx and
@@ -128,7 +128,7 @@ const Parser = {
     let pluginIndex = 0;
 
     return template.replace(pluginRegEx, () => {
-      const replacement = pluginMarkdownMap[pluginIndex];
+      const replacement = pluginDataMap[pluginIndex].markdown;
       pluginIndex++;
 
       return marked(replacement);

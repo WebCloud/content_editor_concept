@@ -9,11 +9,17 @@ const baseStyles = {
 const basePropTypes = {
   className: PropTypes.string,
   pluginIndex: PropTypes.number,
-  getMarkdown: PropTypes.func,
+  getData: PropTypes.func,
   isPreviewing: PropTypes.bool
+};
+
+const baseStateVariables = {
+  editMode: false,
+  pluginData: {}
 };
 
 export {
   baseStyles,
-  basePropTypes
+  basePropTypes,
+  baseStateVariables
 };

@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { baseStyles, basePropTypes } from './base-plugin';
+import { baseStyles, basePropTypes, baseStateVariables } from './base-plugin';
 
 const style = Object.assign({}, baseStyles, { margin: '0em 1em 1em 0em' });
 const pluginProptypes = Object.assign({
@@ -13,11 +13,22 @@ export default class ImagePlugin extends Component {
   constructor(props) {
     super(props);
     this.clickHandler = this.clickHandler.bind(this);
+    this.dragEnter = this.dragEnter.bind(this);
+    this.dragLeave = this.dragLeave.bind(this);
+    this.drop = this.drop.bind(this);
     this.handleImageExtraction = this.handleImageExtraction.bind(this);
 
-    this.state = {
-      editMode: false,
-      imageURL: 'http://i.imgur.com/wXpNi4T.gif'
+    const imageURL = 'http://i.imgur.com/wXpNi4T.gif';
+
+    this.state = Object.assign({ imageURL, isDragging: false }, baseStateVariables);
+  }
+
+  setImageFile(file) {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = ({ target: { result } }) => {
+      this.setState({ imageURL: result, editMode: false, pluginData: file, isDragging: false });
     };
   }
 
@@ -37,9 +48,11 @@ export default class ImagePlugin extends Component {
     });
 
     if (element.type === 'file') {
-      if (!element.name.match(/.jpg|.png|.gif/)) return;
+      const file = element.files[0];
 
-      // send over the file
+      if (!file.name.match(/.jpg|.png|.gif/)) return;
+
+      this.setImageFile(file);
     } else {
       if (!element.value.match(/.jpg|.png|.gif/)) return;
 
@@ -48,37 +61,44 @@ export default class ImagePlugin extends Component {
     }
   }
 
-  dragOver({ preventDefault }) {
-    // this is needed to avoid the default behaviour from the browser
-    preventDefault();
+  dragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
   }
 
-  dragEnter({ preventDefault }) {
-    preventDefault();
+  dragEnter(event) {
+    event.preventDefault();
     this.setState({ isDragging: true });
   }
 
-  dragLeave({ preventDefault }) {
-    preventDefault();
+  dragLeave(event) {
+    event.preventDefault();
     this.setState({ isDragging: false });
   }
 
-  drop({ preventDefault, dataTransfer: { files } }) {
-    if (!this.state.isDisabled) {
-      preventDefault();
-      this.setState({ isDragging: false });
+  drop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const { dataTransfer: { files } } = event;
 
-      // only 1 file for now
-      const file = files[0];
-      this.setState({ isDisabled: true });
-      console.info(file);
-    } else {
-      console.error('you can only upload on file at the time');
-    }
+    // only 1 file for now
+    const file = files[0];
+    this.setImageFile(file);
   }
 
-  clickHandler() {
+  clickHandler({ target: { tagName } }) {
+    if (tagName.toLowerCase().match(/button|input/) !== null) return;
+
     this.setState({ editMode: true });
+  }
+
+  bindDragAndDropEvents() {
+    return {
+      onDragEnter: this.dragEnter,
+      onDragOver: this.dragOver,
+      onDragLeave: this.dragLeave,
+      onDrop: this.drop
+    };
   }
 
   buildContent(isPreviewing) {
@@ -86,17 +106,45 @@ export default class ImagePlugin extends Component {
     const imageStyle = { display: 'block', width: this.props.width };
     const imageElement = <img src={imageURL} style={ imageStyle } />;
 
+    const events = this.bindDragAndDropEvents();
+
+    const overlayEvents = Object.assign({}, events, {
+      onDragEnter: (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+
+    const { padding } = style;
+    const defaultStyle = { padding, position: 'relative' };
+    const dragOverlayStyle = {
+      position: 'absolute',
+      display: ((this.state.isDragging) ? 'flex' : 'none'),
+      width: '100%',
+      height: '100%',
+      top: 0,
+      left: 0,
+      background: 'rgba(228, 228, 228, 0.82)',
+      color: '#636363',
+      alignItems: 'center',
+      justifyContent: 'center'
+    };
+
+    const dragOverlay = <div style={dragOverlayStyle} {...overlayEvents}>Drop here...</div>;
+
     let defaultContent = (
-      <div>
+      <div onClick={this.clickHandler} onDragEnter={events.onDragEnter} style={defaultStyle}>
         Here will be an image like bellow
         { imageElement }
+        { dragOverlay }
       </div>
     );
 
     if (this.state.editMode) {
       const editorStyle = {
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        padding
       };
 
       defaultContent = (
@@ -122,20 +170,29 @@ export default class ImagePlugin extends Component {
   render() {
     const {
       className = '',
-      getMarkdown,
+      getData,
       pluginIndex,
       isPreviewing
     } = this.props;
+    const { pluginData, isDragging } = this.state;
     const classNames = `image-plugin ${className}`;
     const markdown = `![](${this.state.imageURL})`;
-    const pluginStyle = Object.assign({}, style, {
-      border: ((isPreviewing) ? 'none' : style.border)
-    });
 
-    getMarkdown({ markdown, pluginIndex });
+    let border = style.border;
+
+    if (isPreviewing) {
+      border = 'none';
+    }
+    if (isDragging) {
+      border = '2px dashed #A0E2C4';
+    }
+
+    const pluginStyle = Object.assign({}, style, { border, padding: 'none' });
+
+    getData({ markdown, pluginIndex, pluginData });
 
     return (
-      <div style={pluginStyle} className={classNames} onClick={this.clickHandler}>
+      <div style={pluginStyle} className={classNames}>
         {this.buildContent(isPreviewing)}
       </div>
     );

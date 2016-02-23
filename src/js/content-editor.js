@@ -11,6 +11,7 @@ export default class ContentEditor extends Component {
     super(props);
 
     this.handleClick = this.handleClick.bind(this);
+    this.compileTemplate = this.compileTemplate.bind(this);
     this.state = { isPreviewing: false };
   }
 
@@ -21,7 +22,7 @@ export default class ContentEditor extends Component {
 
   compileTemplate() {
     const { template } = this.props;
-    Parser.compileTemplate({ template });
+    console.info(Parser.compileTemplate({ template }));
   }
 
   render() {
@@ -36,7 +37,8 @@ export default class ContentEditor extends Component {
 
     return (
       <div>
-        <button onClick={ this.handleClick }>Toggle Preview</button> <br />
+        <button onClick={ this.handleClick }>Toggle Preview</button>
+        <button onClick={ this.compileTemplate }>Preview result</button> <br />
         { editorElements }
       </div>
     );
