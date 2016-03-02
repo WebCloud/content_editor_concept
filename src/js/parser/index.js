@@ -8,7 +8,7 @@ const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
 
 // Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
 // function, in order to get the markdown content out of the Parser plugins
-const pluginDataMap = [];
+let pluginDataMap = [];
 
 const Parser = {
   getChildrenNodes({ template, style, isPreviewing }) {
@@ -18,6 +18,7 @@ const Parser = {
     const node = document.createElement('div');
     node.innerHTML = template;
     const nodeId = '0';
+    pluginDataMap = [];
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
