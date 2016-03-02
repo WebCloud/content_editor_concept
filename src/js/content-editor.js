@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { Parser } from './parser';
 import { store } from './store';
 import { http } from './store/adapters';
+import { autobind } from 'core-decorators';
 
 const contentStore = store(http);
 
@@ -14,16 +15,16 @@ export default class ContentEditor extends Component {
   constructor(props) {
     super(props);
 
-    this.handleClick = this.handleClick.bind(this);
-    this.compileTemplate = this.compileTemplate.bind(this);
     this.state = { isPreviewing: false };
   }
 
-  handleClick() {
+  @autobind
+  togglePreview() {
     const isPreviewing = !this.state.isPreviewing;
     this.setState({ isPreviewing });
   }
 
+  @autobind
   compileTemplate() {
     const { template } = this.props;
     console.info(Parser.compileTemplate({ template }));
@@ -47,7 +48,7 @@ export default class ContentEditor extends Component {
 
     return (
       <div>
-        <button onClick={ this.handleClick }>Toggle Preview</button>
+        <button onClick={ this.togglePreview }>Toggle Preview</button>
         <button onClick={ this.saveData }>Save Data</button>
         <button onClick={ this.compileTemplate }>Preview result</button> <br />
         { editorElements }
