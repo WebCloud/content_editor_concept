@@ -1,5 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { Parser } from './parser';
+import { store } from './store';
+import { http } from './store/adapters';
+
+const contentStore = store(http);
 
 export default class ContentEditor extends Component {
   static propTypes = {
@@ -25,6 +29,12 @@ export default class ContentEditor extends Component {
     console.info(Parser.compileTemplate({ template }));
   }
 
+  saveData() {
+    const pluginDataMap = Parser.getPluginData();
+    contentStore.save(pluginDataMap)
+      .then(({ pluginId, path: value }) => Parser.updatePluginData({ pluginId, value }));
+  }
+
   render() {
     const { template, componentsStyle: style } = this.props;
     const { isPreviewing } = this.state;
@@ -38,6 +48,7 @@ export default class ContentEditor extends Component {
     return (
       <div>
         <button onClick={ this.handleClick }>Toggle Preview</button>
+        <button onClick={ this.saveData }>Save Data</button>
         <button onClick={ this.compileTemplate }>Preview result</button> <br />
         { editorElements }
       </div>
