@@ -74,7 +74,7 @@ const Parser = {
       matches = editableParts.map((entry) => {
         // Add a new empty string to represent a default markdown string for each plugin
         // instance
-        pluginDataMap.push('');
+        pluginDataMap.push({});
         const pluginIndex = pluginDataMap.length - 1;
 
         // Check for the presence of props passed to the plugin syntax
