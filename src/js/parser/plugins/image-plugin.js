@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { baseStyles, basePropTypes, baseStateVariables } from './base-plugin';
+import { autobind } from 'core-decorators';
 
 const style = Object.assign({}, baseStyles, { margin: '0em 1em 1em 0em' });
 const pluginProptypes = Object.assign({
@@ -7,16 +8,12 @@ const pluginProptypes = Object.assign({
   height: PropTypes.string
 }, basePropTypes);
 
+@autobind
 export default class ImagePlugin extends Component {
   static propTypes = pluginProptypes;
 
   constructor(props) {
     super(props);
-    this.clickHandler = this.clickHandler.bind(this);
-    this.dragEnter = this.dragEnter.bind(this);
-    this.dragLeave = this.dragLeave.bind(this);
-    this.drop = this.drop.bind(this);
-    this.handleImageExtraction = this.handleImageExtraction.bind(this);
 
     const pluginData = {
       imageURL: 'http://i.imgur.com/wXpNi4T.gif',
