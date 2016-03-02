@@ -18,9 +18,16 @@ export default class ImagePlugin extends Component {
     this.drop = this.drop.bind(this);
     this.handleImageExtraction = this.handleImageExtraction.bind(this);
 
-    const imageURL = 'http://i.imgur.com/wXpNi4T.gif';
+    const pluginData = {
+      imageURL: 'http://i.imgur.com/wXpNi4T.gif',
+      alt: 'sample image',
+      key: 'imageURL'
+    };
 
-    this.state = Object.assign({ imageURL, isDragging: false }, baseStateVariables);
+    this.state = Object.assign({}, baseStateVariables, {
+      pluginData,
+      isDragging: false
+    });
   }
 
   setImageFile(file) {
@@ -28,7 +35,10 @@ export default class ImagePlugin extends Component {
     reader.readAsDataURL(file);
 
     reader.onload = ({ target: { result } }) => {
-      this.setState({ imageURL: result, editMode: false, pluginData: file, isDragging: false });
+      const imageURL = result;
+      const alt = file.name;
+      const pluginData = Object.assign({}, this.state.pluginData, { imageURL, file, alt });
+      this.setState({ pluginData, editMode: false, isDragging: false });
     };
   }
 
@@ -56,8 +66,9 @@ export default class ImagePlugin extends Component {
     } else {
       if (!element.value.match(/.jpg|.png|.gif/)) return;
 
-      const imageURL = element.value;
-      this.setState({ imageURL, editMode: false });
+      const pluginData = Object.assign({}, this.state.pluginData, { imageURL: element.value });
+
+      this.setState({ pluginData, editMode: false });
     }
   }
 
@@ -102,7 +113,7 @@ export default class ImagePlugin extends Component {
   }
 
   buildContent(isPreviewing) {
-    const { imageURL } = this.state;
+    const { pluginData: { imageURL } } = this.state;
     const imageStyle = { display: 'block', width: this.props.width };
     const imageElement = <img src={imageURL} style={ imageStyle } />;
 
@@ -172,7 +183,8 @@ export default class ImagePlugin extends Component {
       className = '',
       getData,
       pluginIndex,
-      isPreviewing
+      isPreviewing,
+      pluginId
     } = this.props;
     const { pluginData, isDragging } = this.state;
     const classNames = `image-plugin ${className}`;
@@ -188,8 +200,7 @@ export default class ImagePlugin extends Component {
     }
 
     const pluginStyle = Object.assign({}, style, { border, padding: 'none' });
-
-    getData({ markdown, pluginIndex, pluginData });
+    getData({ markdown, pluginIndex, pluginData, pluginId });
 
     return (
       <div style={pluginStyle} className={classNames}>

@@ -63,14 +63,14 @@ export default class TextPlugin extends Component {
   }
 
   render() {
-    const { className = '', pluginIndex, isPreviewing } = this.props;
+    const { className = '', pluginIndex, pluginId, isPreviewing } = this.props;
     const { markdown } = this.state;
     const classNames = `text-plugin ${className}`;
     const pluginStyle = Object.assign({}, style, {
       border: ((isPreviewing) ? 'none' : style.border)
     });
 
-    this.props.getData({ markdown, pluginIndex });
+    this.props.getData({ markdown, pluginIndex, pluginId });
 
     return (<div className={ classNames } style={ pluginStyle }>
       {this.parseContent()}
