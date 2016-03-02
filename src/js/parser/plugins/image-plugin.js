@@ -188,7 +188,9 @@ export default class ImagePlugin extends Component {
     } = this.props;
     const { pluginData, isDragging } = this.state;
     const classNames = `image-plugin ${className}`;
-    const markdown = `![](${this.state.imageURL})`;
+    const markdown = function getMarkdown({ imageURL, alt }) {
+      return `![${alt}](${imageURL})`;
+    };
 
     let border = style.border;
 

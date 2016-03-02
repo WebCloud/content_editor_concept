@@ -157,10 +157,14 @@ const Parser = {
     let pluginIndex = 0;
 
     return template.replace(pluginRegEx, () => {
-      const replacement = pluginDataMap[pluginIndex].markdown;
+      const markdown = (
+        typeof pluginDataMap[pluginIndex].markdown === 'function' ?
+        pluginDataMap[pluginIndex].markdown(pluginDataMap[pluginIndex].pluginData) :
+        pluginDataMap[pluginIndex].markdown
+      );
       pluginIndex++;
 
-      return marked(replacement);
+      return marked(markdown);
     });
   }
 };
