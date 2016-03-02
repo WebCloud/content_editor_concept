@@ -4,7 +4,7 @@ const koa = require('koa');
 const app = koa();
 const cors = require('koa-cors');
 const staticServer = require('koa-static');
-const bodyParser = require('koa-bodyparser');
+const api = require('./api');
 const runtime = process.env.npm_config_env; // jshint ignore:line
 const gzip = require('koa-gzip');
 
@@ -29,18 +29,8 @@ if (!!runtime && runtime === 'dev') {
 // setup CORS
 app.use(cors());
 
-// setup JSON parsing
-app.use(bodyParser({
-  detectJSON(ctx) {
-    return /\.json$/i.test(ctx.path);
-  },
-  extendTypes: {
-    json: ['application/x-javascript']
-  },
-  onerror(err, ctx) {
-    ctx.throw('body parse error', 422);
-  }
-}));
+// hook our API into the stack
+app.use(api);
 
 // initialize the static server
 app.use(staticServer('./public'));
