@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import { findDOMNode } from 'react-dom';
 import { baseStyles, basePropTypes, baseStateVariables } from './base-plugin';
 import { autobind } from 'core-decorators';
 
@@ -21,6 +22,13 @@ export default class TextPlugin extends Component {
     this.state = Object.assign({ text, markdown }, baseStateVariables);
   }
 
+  componentDidUpdate() {
+    const { input } = this.refs;
+    if (typeof input === 'undefined') return;
+
+    findDOMNode(input).focus();
+  }
+
   getMarkdownHeading(headingLevel) {
     let markdownHeading = '';
 
@@ -37,12 +45,17 @@ export default class TextPlugin extends Component {
   }
 
   @autobind
-  handleInput({ key, target: { value: text } }) {
+  handleInput({ key, target: { value } }) {
     if (key === 'Enter') {
+      const text = (value.length === 0) ? this.state.text : value;
       const headingLevel = this.props.headingLevel.match(/\d$/)[0];
       const markdownHeading = this.getMarkdownHeading(headingLevel);
 
       this.setState({ editMode: false, text, markdown: `${markdownHeading} ${text}` });
+    }
+
+    if (key === 'Escape') {
+      this.setState({ editMode: false });
     }
   }
 
@@ -52,7 +65,7 @@ export default class TextPlugin extends Component {
 
     if (this.state.editMode) {
       parsedContent = (
-        <input type="text" placeholder={this.state.text} onKeyUp={this.handleInput} />
+        <input type="text" placeholder={this.state.text} ref="input" onKeyUp={this.handleInput} />
       );
     }
 
