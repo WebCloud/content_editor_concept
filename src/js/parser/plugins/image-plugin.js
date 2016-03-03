@@ -54,6 +54,11 @@ export default class ImagePlugin extends Component {
       }
     });
 
+    if (element === null) {
+      this.setState({ editMode: false });
+      return;
+    }
+
     if (element.type === 'file') {
       const file = element.files[0];
 
