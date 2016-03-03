@@ -1,15 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import { Parser } from './parser';
-import { store } from './store';
-import { http } from './store/adapters';
 import { autobind } from 'core-decorators';
-
-const contentStore = store(http);
 
 export default class ContentEditor extends Component {
   static propTypes = {
     template: PropTypes.string,
-    componentsStyle: PropTypes.string
+    componentsStyle: PropTypes.string,
+    store: PropTypes.object
   };
 
   constructor(props) {
@@ -30,9 +27,10 @@ export default class ContentEditor extends Component {
     console.info(Parser.compileTemplate({ template }));
   }
 
+  @autobind
   saveData() {
     const pluginDataMap = Parser.getPluginData();
-    contentStore.save(pluginDataMap)
+    this.props.store.save(pluginDataMap)
       .then(({ pluginId, path: value }) => Parser.updatePluginData({ pluginId, value }));
   }
 
