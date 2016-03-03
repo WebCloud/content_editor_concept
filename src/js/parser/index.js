@@ -8,7 +8,7 @@ const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
 
 // Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
 // function, in order to get the markdown content out of the Parser plugins
-let pluginDataMap = [];
+const pluginDataMap = [];
 
 const Parser = {
   getChildrenNodes({ template, style, isPreviewing }) {
@@ -18,7 +18,6 @@ const Parser = {
     const node = document.createElement('div');
     node.innerHTML = template;
     const nodeId = '0';
-    pluginDataMap = [];
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
@@ -74,7 +73,7 @@ const Parser = {
       matches = editableParts.map((entry) => {
         // Add a new empty string to represent a default markdown string for each plugin
         // instance
-        pluginDataMap.push({});
+        pluginDataMap.push('');
         const pluginIndex = pluginDataMap.length - 1;
 
         // Check for the presence of props passed to the plugin syntax
@@ -96,21 +95,19 @@ const Parser = {
           props,
           pluginIndex
         };
-      }).map(({ pluginName, props, pluginIndex }, index) => {
-        const pluginId = `${nodeId}-${pluginName}-${index}`;
+      }).map(({ pluginName, props, pluginIndex }, index) => (
         // Require the React component and create a new React element with it
-        return React.createElement(
+        React.createElement(
           require(`./plugins/${pluginName}-plugin`).default,
           Object.assign({
-            key: pluginId,
-            pluginId,
+            key: `${nodeId}-${pluginName}-${index}`,
             pluginIndex,
             // Pass the mapPluginMarkdown to index the markdown content
             getData: this.mapPluginData,
             isPreviewing
           }, props)
-        );
-      });
+        )
+      ));
     } else {
       // If no plugin syntax is found, simply return the text
       matches = [textContent];
@@ -121,34 +118,8 @@ const Parser = {
 
   // Function to be used as a model for the getData prop for each Parser plugin instance
   // into the ContentEditor
-  mapPluginData({ markdown, pluginIndex, pluginData, pluginId }) {
-    pluginDataMap[pluginIndex] = { markdown, pluginData, pluginId };
-  },
-
-  // A simple getter for the private variable pluginDataMap
-  getPluginData() {
-    return pluginDataMap;
-  },
-
-  // Run though the pluginDataMap matching the pluginId. Once found update the plugin data
-  // with the passed value.
-  updatePluginData({ pluginId: targetId, value }) {
-    let foundIndex = 0;
-
-    const { pluginData } = pluginDataMap.find(({ pluginId }, index) => {
-      const isTarget = pluginId === targetId;
-
-      if (isTarget) {
-        foundIndex = index;
-      }
-      return isTarget;
-    });
-
-    // Update the desired entry ojn the pluginData, indicated by the pluginData.key property
-    pluginData[pluginData.key] = value;
-    // Remove the file from memory after updating the plugin data
-    pluginData.file = null;
-    pluginDataMap[foundIndex].pluginData = pluginData;
+  mapPluginData({ markdown, pluginIndex, pluginData }) {
+    pluginDataMap[pluginIndex] = { markdown, pluginData };
   },
 
   // Compiles the template by matching the plugin matches with the pluginRegEx and
@@ -157,14 +128,10 @@ const Parser = {
     let pluginIndex = 0;
 
     return template.replace(pluginRegEx, () => {
-      const markdown = (
-        typeof pluginDataMap[pluginIndex].markdown === 'function' ?
-        pluginDataMap[pluginIndex].markdown(pluginDataMap[pluginIndex].pluginData) :
-        pluginDataMap[pluginIndex].markdown
-      );
+      const replacement = pluginDataMap[pluginIndex].markdown;
       pluginIndex++;
 
-      return marked(markdown);
+      return marked(replacement);
     });
   }
 };

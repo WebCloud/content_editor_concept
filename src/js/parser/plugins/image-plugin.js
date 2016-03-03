@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import { baseStyles, basePropTypes, baseStateVariables } from './base-plugin';
-import { autobind } from 'core-decorators';
 
 const style = Object.assign({}, baseStyles, { margin: '0em 1em 1em 0em' });
 const pluginProptypes = Object.assign({
@@ -8,23 +7,20 @@ const pluginProptypes = Object.assign({
   height: PropTypes.string
 }, basePropTypes);
 
-@autobind
 export default class ImagePlugin extends Component {
   static propTypes = pluginProptypes;
 
   constructor(props) {
     super(props);
+    this.clickHandler = this.clickHandler.bind(this);
+    this.dragEnter = this.dragEnter.bind(this);
+    this.dragLeave = this.dragLeave.bind(this);
+    this.drop = this.drop.bind(this);
+    this.handleImageExtraction = this.handleImageExtraction.bind(this);
 
-    const pluginData = {
-      imageURL: 'http://i.imgur.com/wXpNi4T.gif',
-      alt: 'sample image',
-      key: 'imageURL'
-    };
+    const imageURL = 'http://i.imgur.com/wXpNi4T.gif';
 
-    this.state = Object.assign({}, baseStateVariables, {
-      pluginData,
-      isDragging: false
-    });
+    this.state = Object.assign({ imageURL, isDragging: false }, baseStateVariables);
   }
 
   setImageFile(file) {
@@ -32,10 +28,7 @@ export default class ImagePlugin extends Component {
     reader.readAsDataURL(file);
 
     reader.onload = ({ target: { result } }) => {
-      const imageURL = result;
-      const alt = file.name;
-      const pluginData = Object.assign({}, this.state.pluginData, { imageURL, file, alt });
-      this.setState({ pluginData, editMode: false, isDragging: false });
+      this.setState({ imageURL: result, editMode: false, pluginData: file, isDragging: false });
     };
   }
 
@@ -63,9 +56,8 @@ export default class ImagePlugin extends Component {
     } else {
       if (!element.value.match(/.jpg|.png|.gif/)) return;
 
-      const pluginData = Object.assign({}, this.state.pluginData, { imageURL: element.value });
-
-      this.setState({ pluginData, editMode: false });
+      const imageURL = element.value;
+      this.setState({ imageURL, editMode: false });
     }
   }
 
@@ -110,7 +102,7 @@ export default class ImagePlugin extends Component {
   }
 
   buildContent(isPreviewing) {
-    const { pluginData: { imageURL } } = this.state;
+    const { imageURL } = this.state;
     const imageStyle = { display: 'block', width: this.props.width };
     const imageElement = <img src={imageURL} style={ imageStyle } />;
 
@@ -180,14 +172,11 @@ export default class ImagePlugin extends Component {
       className = '',
       getData,
       pluginIndex,
-      isPreviewing,
-      pluginId
+      isPreviewing
     } = this.props;
     const { pluginData, isDragging } = this.state;
     const classNames = `image-plugin ${className}`;
-    const markdown = function getMarkdown({ imageURL, alt }) {
-      return `![${alt}](${imageURL})`;
-    };
+    const markdown = `![](${this.state.imageURL})`;
 
     let border = style.border;
 
@@ -199,7 +188,8 @@ export default class ImagePlugin extends Component {
     }
 
     const pluginStyle = Object.assign({}, style, { border, padding: 'none' });
-    getData({ markdown, pluginIndex, pluginData, pluginId });
+
+    getData({ markdown, pluginIndex, pluginData });
 
     return (
       <div style={pluginStyle} className={classNames}>

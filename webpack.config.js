@@ -20,10 +20,7 @@ module.exports = {
           ],
           plugins: [
             'syntax-class-properties',
-            'transform-class-properties',
-            'syntax-decorators',
-            'transform-decorators-legacy',
-            'transform-object-rest-spread'
+            'transform-class-properties'
           ]
         }
       },
