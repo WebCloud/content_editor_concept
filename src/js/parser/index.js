@@ -106,7 +106,7 @@ const Parser = {
             pluginId,
             pluginIndex,
             // Pass the mapPluginMarkdown to index the markdown content
-            getData: this.mapPluginData,
+            setPluginData: this.mapPluginData,
             isPreviewing
           }, props)
         );
@@ -119,10 +119,10 @@ const Parser = {
     return matches;
   },
 
-  // Function to be used as a model for the getData prop for each Parser plugin instance
+  // Function to be used as a model for the setPluginData prop for each Parser plugin instance
   // into the ContentEditor
-  mapPluginData({ markdown, pluginIndex, pluginData, pluginId }) {
-    pluginDataMap[pluginIndex] = { markdown, pluginData, pluginId };
+  mapPluginData({ pluginIndex, pluginData, pluginId }) {
+    pluginDataMap[pluginIndex] = { pluginData, pluginId };
   },
 
   // A simple getter for the private variable pluginDataMap
@@ -133,22 +133,31 @@ const Parser = {
   // Run though the pluginDataMap matching the pluginId. Once found update the plugin data
   // with the passed value.
   updatePluginData({ pluginId: targetId, value }) {
-    let foundIndex = 0;
+    pluginDataMap.forEach((plugin, index) => {
+      const { pluginId, pluginData } = plugin;
+      let isTarget = false;
+      let pluginValueIndex = null;
 
-    const { pluginData } = pluginDataMap.find(({ pluginId }, index) => {
-      const isTarget = pluginId === targetId;
+      // The targetId can be either an object or array, deppending on the number of plugins
+      // that sent data to be saved
+      if (typeof targetId.includes !== 'undefined') {
+        isTarget = targetId.includes(pluginId);
+        pluginValueIndex = targetId.indexOf(pluginId);
+      } else {
+        isTarget = pluginId === targetId;
+      }
 
       if (isTarget) {
-        foundIndex = index;
+        // Update the desired entry on the pluginData, indicated by the pluginData.key property
+        // The value property can be either an array or object, depending on the number of plugins
+        // that sent data to be saved
+        const newValue = (pluginValueIndex !== null) ? value[pluginValueIndex] : value;
+        pluginData[pluginData.key] = newValue;
+        // Remove the file from memory after updating the plugin data
+        pluginData.file = null;
+        pluginDataMap[index].pluginData = pluginData;
       }
-      return isTarget;
     });
-
-    // Update the desired entry ojn the pluginData, indicated by the pluginData.key property
-    pluginData[pluginData.key] = value;
-    // Remove the file from memory after updating the plugin data
-    pluginData.file = null;
-    pluginDataMap[foundIndex].pluginData = pluginData;
   },
 
   // Compiles the template by matching the plugin matches with the pluginRegEx and
@@ -157,10 +166,11 @@ const Parser = {
     let pluginIndex = 0;
 
     return template.replace(pluginRegEx, () => {
+      const pluginMarkdown = pluginDataMap[pluginIndex].pluginData.markdown || '';
       const markdown = (
-        typeof pluginDataMap[pluginIndex].markdown === 'function' ?
-        pluginDataMap[pluginIndex].markdown(pluginDataMap[pluginIndex].pluginData) :
-        pluginDataMap[pluginIndex].markdown
+        typeof pluginMarkdown === 'function' ?
+        pluginMarkdown(pluginDataMap[pluginIndex].pluginData) :
+        pluginMarkdown
       );
       pluginIndex++;
 
