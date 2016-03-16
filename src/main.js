@@ -25,7 +25,18 @@ const template = `
 </div>
 `;
 
+function saveData(data) {
+  console.info(data);
+}
+
+const props = {
+  template,
+  componentsStyle: style,
+  onSave: saveData,
+  store: contentStore
+};
+
 render(
-  <ContentEditor template={ template } componentsStyle={ style } store={ contentStore } />,
+  <ContentEditor { ...props } />,
   document.querySelector('.editor')
 );
