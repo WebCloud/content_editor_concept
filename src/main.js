@@ -15,17 +15,31 @@ div.outter {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: flex-start;
+  margin-top: 2em;
 }
 `;
 
 const template = `
 <div class="outter">
+  {content.image {className: 'some-class-other', width: '100%', height: '11em'}}
   {content.image {className: 'some-class-other', width: '10em'}}
   {content.text {headingLevel: 'h4', className: 'a-text'}}
+  {content.md {className: 'markdown-editor', width: '100%'}}
 </div>
 `;
 
+function saveData(data) {
+  console.info(data);
+}
+
+const props = {
+  template,
+  componentsStyle: style,
+  onSave: saveData,
+  store: contentStore
+};
+
 render(
-  <ContentEditor template={ template } componentsStyle={ style } store={ contentStore } />,
+  <ContentEditor { ...props } />,
   document.querySelector('.editor')
 );

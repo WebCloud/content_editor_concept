@@ -6,7 +6,8 @@ export default class ContentEditor extends Component {
   static propTypes = {
     template: PropTypes.string,
     componentsStyle: PropTypes.string,
-    store: PropTypes.object
+    store: PropTypes.object,
+    onSave: PropTypes.func
   };
 
   constructor(props) {
@@ -24,7 +25,7 @@ export default class ContentEditor extends Component {
   @autobind
   compileTemplate() {
     const { template } = this.props;
-    console.info(Parser.compileTemplate({ template }));
+    this.props.onSave(Parser.compileTemplate({ template }));
   }
 
   @autobind
@@ -46,9 +47,11 @@ export default class ContentEditor extends Component {
 
     return (
       <div>
-        <button onClick={ this.togglePreview }>Toggle Preview</button>
-        <button onClick={ this.saveData }>Save Data</button>
-        <button onClick={ this.compileTemplate }>Preview result</button> <br />
+        <div className="control-bar">
+          <button onClick={ this.togglePreview }>Toggle Preview</button>
+          <button onClick={ this.saveData }>Save Data</button>
+          <button onClick={ this.compileTemplate }>Preview result</button>
+        </div>
         { editorElements }
       </div>
     );

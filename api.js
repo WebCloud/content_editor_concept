@@ -15,7 +15,15 @@ router.post(
     }
   }),
   function *assetUploadEndpoint() {
-    const path = this.request.body.files.asset.path.replace(`${__dirname}/public`, '');
+    const uploaded = this.request.body.files.asset;
+    let path = '';
+
+    if (typeof uploaded.length !== 'undefined') {
+      path = uploaded.map((asset) =>
+        (asset.path.replace(`${__dirname}/public`, '')));
+    } else {
+      path = uploaded.path.replace(`${__dirname}/public`, '');
+    }
     const pluginId = this.request.body.fields.pluginId;
     this.body = {
       pluginId,

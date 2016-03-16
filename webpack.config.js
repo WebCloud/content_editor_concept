@@ -1,4 +1,11 @@
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const path = require('path');
+
+const sassLoaders = [
+  'css-loader',
+  'postcss-loader',
+  `sass-loader?includePaths[]=${path.resolve(__dirname, './src/styles')}`
+];
 
 module.exports = {
   entry: './src/main.js',
@@ -29,7 +36,7 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        loader: ExtractTextPlugin.extract('style', 'css', 'postcss-loader', 'sass')
+        loader: ExtractTextPlugin.extract('style-loader', sassLoaders.join('!'))
       }
     ]
   },

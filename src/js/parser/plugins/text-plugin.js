@@ -1,25 +1,26 @@
 import React, { Component, PropTypes } from 'react';
 import { findDOMNode } from 'react-dom';
-import { baseStyles, basePropTypes, baseStateVariables } from './base-plugin';
 import { autobind } from 'core-decorators';
+import pluginConstructor from './plugin-constructor';
 
-const style = Object.assign({}, baseStyles, { padding: '0 1em' });
-const pluginProptypes = Object.assign({
-  headingLevel: PropTypes.string,
-  placeholderText: PropTypes.string
-}, basePropTypes);
+let componentWidth = null;
 
-export default class TextPlugin extends Component {
-  static propTypes = pluginProptypes;
+class TextPlugin extends Component {
+  static propTypes = {
+    headingLevel: PropTypes.string,
+    className: PropTypes.string,
+    style: PropTypes.object,
+    toggleEditMode: PropTypes.func,
+    updatePluginData: PropTypes.func,
+    pluginData: PropTypes.object,
+    editMode: PropTypes.bool
+  };
 
-  constructor(props) {
-    super(props);
-
-    const { placeholderText: text = 'Here will be some heading text' } = this.props;
-    const headingLevel = this.props.headingLevel.match(/\d$/)[0];
-    const markdown = `${this.getMarkdownHeading(headingLevel)} ${text}`;
-
-    this.state = Object.assign({ text, markdown }, baseStateVariables);
+  componentWillUpdate() {
+    const header = findDOMNode(this).querySelector(this.props.headingLevel);
+    if (header !== null) {
+      componentWidth = header.getBoundingClientRect().width;
+    }
   }
 
   componentDidUpdate() {
@@ -31,8 +32,9 @@ export default class TextPlugin extends Component {
 
   getMarkdownHeading(headingLevel) {
     let markdownHeading = '';
+    let i = 0;
 
-    for (let i = 0; i < headingLevel; i++) {
+    for (i; i < headingLevel; i++) {
       markdownHeading += '#';
     }
 
@@ -40,54 +42,67 @@ export default class TextPlugin extends Component {
   }
 
   @autobind
-  clickEventHandler() {
-    this.setState({ editMode: !this.state.editMode });
-  }
-
-  @autobind
-  handleInput({ key, target: { value } }) {
+  handleInput({ key, target: { value: text } }) {
     if (key === 'Enter') {
-      const text = (value.length === 0) ? this.state.text : value;
+      const { text: pluginText } = this.props.pluginData;
+
+      if (text === pluginText || text === '') {
+        this.props.toggleEditMode();
+        return;
+      }
+
       const headingLevel = this.props.headingLevel.match(/\d$/)[0];
       const markdownHeading = this.getMarkdownHeading(headingLevel);
+      const pluginData = { text, markdown: `${markdownHeading} ${text}` };
 
-      this.setState({ editMode: false, text, markdown: `${markdownHeading} ${text}` });
+      this.props.updatePluginData({ editMode: false, pluginData });
     }
 
     if (key === 'Escape') {
-      this.setState({ editMode: false });
+      this.props.toggleEditMode();
     }
   }
 
-  parseContent() {
-    const props = { onClick: this.clickEventHandler };
-    let parsedContent = React.createElement(this.props.headingLevel, props, this.state.text);
+  renderContent() {
+    const {
+      pluginData: { text = 'Here will be some heading text' },
+      toggleEditMode: onClick,
+      editMode,
+      headingLevel
+    } = this.props;
+    let parsedContent = null;
 
-    if (this.state.editMode) {
+    if (editMode) {
       parsedContent = (
-        <input type="text" placeholder={this.state.text} ref="input" onKeyUp={this.handleInput} />
+        <input type="text"
+          placeholder={text}
+          ref="input"
+          onKeyUp={this.handleInput}
+          style={{
+            padding: '1em 0',
+            outline: 'none',
+            border: 'none',
+            fontSize: '1em',
+            width: componentWidth
+          }}
+        />
       );
+    } else {
+      parsedContent = React.createElement(headingLevel, { onClick }, text);
     }
 
     return parsedContent;
   }
 
-  shoudComponentUpdate(previousState, nextState) {
-    return previousState.editMode !== nextState.editMode;
-  }
-
   render() {
-    const { className = '', pluginIndex, pluginId, isPreviewing } = this.props;
-    const { markdown } = this.state;
+    const { className = '', style } = this.props;
     const classNames = `text-plugin ${className}`;
-    const pluginStyle = Object.assign({}, style, {
-      border: ((isPreviewing) ? 'none' : style.border)
-    });
-
-    this.props.getData({ markdown, pluginIndex, pluginId });
+    const pluginStyle = Object.assign({}, style, { margin: '0 1em', padding: '0 1em' });
 
     return (<div className={ classNames } style={ pluginStyle }>
-      {this.parseContent()}
+      {this.renderContent()}
     </div>);
   }
 }
+
+export default pluginConstructor(TextPlugin);
