@@ -13,7 +13,7 @@ function httpSave({ data, normalizer, pluginId, config }) {
         json.pluginId = json.pluginId || pluginId;
         resolve(json);
       })
-      .catch((reason) => (reject(reason)));
+      .catch(reject);
   });
 }
 
