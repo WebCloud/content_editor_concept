@@ -2,9 +2,9 @@ import React from 'react';
 import marked from 'marked';
 
 // RegEx for the plugin syntax: {content.pluginName {pluginProp: 'propValue'}}
-const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\})?\}/g; // eslint-disable-line max-len
+const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}%?('|")?(,)?\s?){1,}\})?\}/g; // eslint-disable-line max-len
 // RegEx for the plugin props part on the plugin syntax, using JSON-like values
-const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}('|")?(,)?\s?){1,}\}/g;
+const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}%?('|")?(,)?\s?){1,}\}/g;
 
 // Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
 // function, in order to get the markdown content out of the Parser plugins
