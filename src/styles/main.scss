@@ -1,4 +1,20 @@
 .editor {
   padding: 1em;
   border: dashed 0.15em #acacac;
+  position: relative;
+  font-family: Arial;
+
+  .control-bar {
+    position: absolute;
+    top: 1em;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 1em 0;
 }

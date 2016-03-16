@@ -47,9 +47,11 @@ export default class ContentEditor extends Component {
 
     return (
       <div>
-        <button onClick={ this.togglePreview }>Toggle Preview</button>
-        <button onClick={ this.saveData }>Save Data</button>
-        <button onClick={ this.compileTemplate }>Preview result</button> <br />
+        <div className="control-bar">
+          <button onClick={ this.togglePreview }>Toggle Preview</button>
+          <button onClick={ this.saveData }>Save Data</button>
+          <button onClick={ this.compileTemplate }>Preview result</button>
+        </div>
         { editorElements }
       </div>
     );
