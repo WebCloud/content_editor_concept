@@ -6,7 +6,8 @@ export default class ContentEditor extends Component {
   static propTypes = {
     template: PropTypes.string,
     componentsStyle: PropTypes.string,
-    store: PropTypes.object
+    store: PropTypes.object,
+    onSave: PropTypes.func
   };
 
   constructor(props) {
@@ -24,7 +25,7 @@ export default class ContentEditor extends Component {
   @autobind
   compileTemplate() {
     const { template } = this.props;
-    console.info(Parser.compileTemplate({ template }));
+    this.props.onSave(Parser.compileTemplate({ template }));
   }
 
   @autobind
