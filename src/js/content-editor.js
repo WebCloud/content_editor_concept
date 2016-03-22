@@ -36,17 +36,21 @@ export default class ContentEditor extends Component {
   }
 
   render() {
-    const { template, componentsStyle: style } = this.props;
+    const { template: rawTemplate, componentsStyle: style } = this.props;
     const { isPreviewing } = this.state;
 
+    const template = rawTemplate.replace(/\n|(\s{1,}(?=<))/g, '');
+
     const editorElements = Parser.getChildrenNodes({
-      template: template.replace(/\n|(\s{1,}(?=<))/g, ''),
+      template,
       style,
       isPreviewing
     });
 
+    const className = `editor-wrapper${isPreviewing ? ' editor-wrapper--preview' : ''}`;
+
     return (
-      <div>
+      <div className={className}>
         <div className="control-bar">
           <button onClick={ this.togglePreview }>Toggle Preview</button>
           <button onClick={ this.saveData }>Save Data</button>
