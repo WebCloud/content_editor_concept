@@ -15,7 +15,6 @@ div.outter {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: flex-start;
-  margin-top: 2em;
 }
 `;
 

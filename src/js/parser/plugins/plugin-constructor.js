@@ -33,7 +33,7 @@ export default function PluginConstructor(Plugin) {
     render() {
       const style = {
         padding: '1em',
-        border: 'dashed 2px #acacac',
+        border: 'dashed 2px #E6E5E5',
         display: 'inline-block'
       };
 
@@ -44,10 +44,13 @@ export default function PluginConstructor(Plugin) {
       const { pluginIndex, pluginId } = this.props;
       const { pluginData } = this.state;
 
+      const className = `plugin ${this.props.className}`;
+
       this.props.setPluginData({ pluginData, pluginIndex, pluginId });
       return (<Plugin
         {...this.props}
         {...this.state}
+        className={className}
         toggleEditMode={this.toggleEditMode}
         updatePluginData={this.updatePluginData}
         style={pluginStyle}
