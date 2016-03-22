@@ -1,5 +1,7 @@
 # React content editor concept
 
+![preview image](https://raw.githubusercontent.com/WebCloud/content_editor_comcept/master/public/img/preview.png)
+
 This is a conceptual experiment built with React. It has a [Parser](https://github.com/WebCloud/content_editor_comcept/blob/master/src/js/parser/index.js), for restructuring a template into React code.
 
 The plugins use a higher order component structure in order to encapsulate the common logic into a transparent layer.
