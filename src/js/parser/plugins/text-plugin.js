@@ -79,9 +79,11 @@ class TextPlugin extends Component {
           ref="input"
           onKeyUp={this.handleInput}
           style={{
-            padding: '1em 0',
+            padding: '1em 0 0',
+            marginBottom: '1em',
             outline: 'none',
             border: 'none',
+            borderBottom: '2px solid #E4E4E4',
             fontSize: '1em',
             width: componentWidth
           }}
@@ -97,7 +99,11 @@ class TextPlugin extends Component {
   render() {
     const { className = '', style } = this.props;
     const classNames = `text-plugin ${className}`;
-    const pluginStyle = Object.assign({}, style, { margin: '0 1em', padding: '0 1em' });
+    const borderStyle = { border: (this.props.editMode ? 'dashed 2px #F1F1F1' : style.border) };
+    const pluginStyle = Object.assign({}, style, {
+      margin: '0 1em',
+      padding: '0 1em'
+    }, borderStyle);
 
     return (<div className={ classNames } style={ pluginStyle }>
       {this.renderContent()}

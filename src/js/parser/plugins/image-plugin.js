@@ -139,6 +139,7 @@ class ImagePlugin extends Component {
       display: 'block',
       width: '100%',
       maxWidth: width,
+      maxHeight: '100%',
       opacity: (isPreviewing ? 1 : '0.6'),
       position: 'absolute',
       top: 0,
@@ -254,7 +255,7 @@ class ImagePlugin extends Component {
       height: '100%',
       top: 0,
       left: 0,
-      background: 'rgba(228, 228, 228, 0.94)',
+      background: 'rgba(246, 251, 248, 0.9)',
       color: '#636363',
       alignItems: 'center',
       justifyContent: 'center'
