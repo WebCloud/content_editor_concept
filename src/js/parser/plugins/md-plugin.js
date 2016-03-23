@@ -25,9 +25,10 @@ class MDPlugin extends Component {
 
   renderContent() {
     const { html = '', markdown = '' } = this.props.pluginData;
+    const { padding } = this.props.style;
     const content = (!this.props.editMode)
       ? (
-      <div onClick={this.props.toggleEditMode}>
+      <div style={{ padding }} onClick={this.props.toggleEditMode}>
         {(html !== '')
           ? <div dangerouslySetInnerHTML={{ __html: html }} />
           : 'Click to edit markdown'}
@@ -46,7 +47,8 @@ class MDPlugin extends Component {
     const classNames = `md-plugin ${className}`;
     const pluginStyle = Object.assign({}, style, {
       textAlign: (editMode || markdown !== '' ? 'left' : 'center'),
-      width
+      width,
+      padding: 0
     });
 
     return (<div className={ classNames } style={ pluginStyle }>

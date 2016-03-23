@@ -45,7 +45,7 @@ export default class MarkdownEditor extends Component {
   }
 
   onKeyDown({ metaKey, key }) {
-    if (metaKey && key === 'Enter') {
+    if ((metaKey && key === 'Enter') || key === 'Escape') {
       this.onDoneWithEditing();
     }
   }
