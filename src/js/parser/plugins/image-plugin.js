@@ -33,12 +33,12 @@ class ImagePlugin extends Component {
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
-    reader.onload = ({ target: { result } }) => {
-      const imageURL = result;
-      const alt = file.name;
-      const markdown = function getMarkdown({ imageURL: image, alt: imgAlt }) {
-        return `![${imgAlt}](${image})`;
-      };
+    reader.onload = ({ target: { result: imageURL } }) => {
+      function markdown({ pluginData: { imageURL: image, alt: imgAlt }, className }) {
+        return `<img alt="${imgAlt}" class="${className}" src="${image}" />`;
+      }
+
+      const { name: alt } = file;
       const pluginData = Object.assign({}, this.props.pluginData, {
         imageURL,
         key: 'imageURL',

@@ -8,7 +8,7 @@ const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}%?('|")?(,)?\s?){1,}\}/g
 
 // Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
 // function, in order to get the markdown content out of the Parser plugins
-let pluginDataMap = [];
+const pluginDataMap = [];
 
 const Parser = {
   getChildrenNodes({ template, style, isPreviewing }) {
@@ -18,7 +18,6 @@ const Parser = {
     const node = document.createElement('div');
     node.innerHTML = template;
     const nodeId = '0';
-    pluginDataMap = [];
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
@@ -71,40 +70,40 @@ const Parser = {
 
     if (editableParts !== null) {
       // If we find plugin matches map them into React Elements on a two part step
-      matches = editableParts.map((entry) => {
-        // Add a new empty string to represent a default markdown string for each plugin
-        // instance
-        pluginDataMap.push({});
-        const pluginIndex = pluginDataMap.length - 1;
-
-        // Check for the presence of props passed to the plugin syntax
-        const unparsedProps = entry.match(propsRegEX);
+      matches = editableParts.map((entry, index) => {
+        const pluginName = entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0];
+        const pluginId = `${nodeId}-${pluginName}-${index}`;
+        const pluginIndex = pluginDataMap.findIndex(({ pluginId: id }) => id === pluginId);
         let props = {};
 
-        if (unparsedProps !== null) {
-          // If we receive, normalize it into a JSON string to then parse it into
-          // a JSON object.
-          props = JSON.parse(
-                    unparsedProps[0].replace(/\w+:/g, (match) => (`"${match.split(':')[0]}":`))
-                                    .replace(/'/g, '"'));
+        if (pluginIndex !== -1) {
+          // If the plugin already exists in the pluginDataMap, we fetch it's props
+          props = pluginDataMap[pluginIndex];
+        } else {
+          // Check for the presence of props passed to the plugin syntax
+          const unparsedProps = entry.match(propsRegEX);
+
+          if (unparsedProps !== null) {
+            // If we have props, normalize it into a JSON string to then parse it into
+            // a JSON object.
+            const normalizedPropsString = unparsedProps[0]
+              .replace(/\w+:/g, (match) => (`"${match.split(':')[0]}":`))
+              .replace(/'/g, '"');
+
+            props = JSON.parse(normalizedPropsString);
+          }
+
+          pluginDataMap.push({ pluginId, ...props });
         }
 
-        // Return an object with the pluginName and the props to be used to
-        // require the React component
-        return {
-          pluginName: entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0],
-          props,
-          pluginIndex
-        };
-      }).map(({ pluginName, props, pluginIndex }, index) => {
-        const pluginId = `${nodeId}-${pluginName}-${index}`;
         // Require the React component and create a new React element with it
         return React.createElement(
           require(`./plugins/${pluginName}-plugin`).default,
+          // Create a new object combining the declared plugin props on the template with
+          // other needed props such as the key, the pluginId and the setPluginData
           Object.assign({
             key: pluginId,
             pluginId,
-            pluginIndex,
             // Pass the mapPluginMarkdown to index the markdown content
             setPluginData: this.mapPluginData,
             isPreviewing
@@ -121,8 +120,17 @@ const Parser = {
 
   // Function to be used as a model for the setPluginData prop for each Parser plugin instance
   // into the ContentEditor
-  mapPluginData({ pluginIndex, pluginData, pluginId }) {
-    pluginDataMap[pluginIndex] = { pluginData, pluginId };
+  mapPluginData({ pluginData, pluginId }) {
+    const pluginIndex = pluginDataMap.findIndex(({ pluginId: id }) => id === pluginId);
+
+    // Create a new props object, which will be all current props + an updated pluginData
+    const props = Object.assign({},
+      pluginDataMap[pluginIndex],
+      { pluginData }
+    );
+
+    // Update the plugin props with the new props object
+    pluginDataMap[pluginIndex] = props;
   },
 
   // A simple getter for the private variable pluginDataMap
@@ -166,15 +174,14 @@ const Parser = {
     let pluginIndex = 0;
 
     return template.replace(pluginRegEx, () => {
-      const pluginMarkdown = pluginDataMap[pluginIndex].pluginData.markdown || '';
-      const markdown = (
-        typeof pluginMarkdown === 'function' ?
-        pluginMarkdown(pluginDataMap[pluginIndex].pluginData) :
-        pluginMarkdown
+      const { markdown = '' } = pluginDataMap[pluginIndex].pluginData;
+      const pluginMarkdown = (typeof markdown === 'function'
+        ? markdown(pluginDataMap[pluginIndex])
+        : markdown
       );
       pluginIndex++;
 
-      return marked(markdown);
+      return marked(pluginMarkdown);
     });
   }
 };
