@@ -1,6 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import MarkdownEditor from './md-plugin/markdown-editor';
-import marked from 'marked';
 import { autobind } from 'core-decorators';
 import pluginConstructor from './plugin-constructor';
 
@@ -18,6 +16,7 @@ class MDPlugin extends Component {
 
   @autobind
   updateMarkdown(markdown) {
+    const marked = require('marked');
     const html = marked(markdown);
     const pluginData = { markdown, html };
     this.props.updatePluginData({ pluginData, editMode: false });
@@ -26,18 +25,21 @@ class MDPlugin extends Component {
   renderContent() {
     const { html = '', markdown = '' } = this.props.pluginData;
     const { padding } = this.props.style;
-    const content = (!this.props.editMode)
-      ? (
+    let content = (
       <div style={{ padding }} onClick={this.props.toggleEditMode}>
         {(html !== '')
           ? <div dangerouslySetInnerHTML={{ __html: html }} />
           : 'Click to edit markdown'}
       </div>
-      )
-      : <MarkdownEditor
+    );
+
+    if (this.props.editMode) {
+      const MarkdownEditor = require('./md-plugin/markdown-editor').default;
+      content = (<MarkdownEditor
         markdown={markdown}
         onUpdateMarkdown={this.updateMarkdown}
-      />;
+      />);
+    }
 
     return content;
   }
