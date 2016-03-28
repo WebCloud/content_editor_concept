@@ -5,10 +5,9 @@ export default function PluginConstructor(Plugin) {
   return class extends Component {
     static propTypes = {
       className: PropTypes.string,
-      pluginIndex: PropTypes.number,
-      setPluginData: PropTypes.func,
-      isPreviewing: PropTypes.bool,
-      pluginId: PropTypes.string
+      setPluginData: PropTypes.func.isRequired,
+      isPreviewing: PropTypes.bool.isRequired,
+      pluginId: PropTypes.string.isRequired
     };
 
     constructor(props) {
@@ -41,12 +40,12 @@ export default function PluginConstructor(Plugin) {
         border: ((this.props.isPreviewing) ? 'none' : style.border)
       });
 
-      const { pluginIndex, pluginId } = this.props;
+      const { pluginId } = this.props;
       const { pluginData } = this.state;
 
       const className = `plugin ${this.props.className}`;
 
-      this.props.setPluginData({ pluginData, pluginIndex, pluginId });
+      this.props.setPluginData({ pluginData, pluginId });
       return (<Plugin
         {...this.props}
         {...this.state}
