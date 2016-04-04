@@ -1,6 +1,6 @@
 export default {
   save: {
-    serializer(data) {
+    serialize(data) {
       return new Promise((resolve, reject) => {
         const formData = new FormData();
         let pluginId = null;
@@ -24,7 +24,7 @@ export default {
       });
     },
 
-    normalizer(response) {
+    normalize(response) {
       return response.json();
     },
 
