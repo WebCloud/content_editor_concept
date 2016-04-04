@@ -11,7 +11,7 @@ const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}%?('|")?(,)?\s?){1,}\}/g
 const pluginDataMap = [];
 
 const Parser = {
-  getChildrenNodes({ template, style, isPreviewing }) {
+  getChildrenNodes({ template, style, props }) {
     // Transform the template into a DOM tree in order to better transverse it
     // and transform it into React elements to be rendered into the screen
 
@@ -21,10 +21,10 @@ const Parser = {
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
-    return this.parseNodes({ node, style, isPreviewing, nodeId });
+    return this.parseNodes({ node, style, props, nodeId });
   },
 
-  parseNodes({ node: { childNodes = [] }, style, isPreviewing, nodeId }) {
+  parseNodes({ node: { childNodes = [] }, style, props, nodeId }) {
     let nodeList = [];
 
     childNodes.forEach((node, index) => {
@@ -37,7 +37,7 @@ const Parser = {
         // current node list.
         const textContent = node.textContent;
         nodeList = nodeList.concat(
-          this.extractPlugins({ textContent, isPreviewing, nodeId: childNodeId })
+          this.extractPlugins({ textContent, props, nodeId: childNodeId })
         );
       } else {
         const { tagName, className } = node;
@@ -47,7 +47,7 @@ const Parser = {
         // If we have childNodes call parseNodes on the node to keep trasversing
         // and parsing the tree. Receive the result into a array, childrenList
         if (node.hasChildNodes()) {
-          childrenList = this.parseNodes({ node, isPreviewing, nodeId: childNodeId });
+          childrenList = this.parseNodes({ node, props, nodeId: childNodeId });
         }
 
         // If we have style defined to be used, create a style tag for inline
@@ -63,7 +63,7 @@ const Parser = {
     return nodeList;
   },
 
-  extractPlugins({ textContent, isPreviewing, nodeId }) {
+  extractPlugins({ textContent, props, nodeId }) {
     // Receive any matches for the plugin syntax
     const editableParts = textContent.match(pluginRegEx);
     let matches = [];
@@ -74,11 +74,12 @@ const Parser = {
         const pluginName = entry.replace(/(\{)|(content\.)|(\})/g, '').split(' ')[0];
         const pluginId = `${nodeId}-${pluginName}-${index}`;
         const pluginIndex = pluginDataMap.findIndex(({ pluginId: id }) => id === pluginId);
-        let props = {};
+        let pluginProps = { ...props };
 
         if (pluginIndex !== -1) {
-          // If the plugin already exists in the pluginDataMap, we fetch it's props
-          props = pluginDataMap[pluginIndex];
+          // If the plugin already exists in the pluginDataMap, we fetch it's props,
+          // but also keep the new props passed by the ContentEditor
+          pluginProps = Object.assign({}, pluginDataMap[pluginIndex], pluginProps);
         } else {
           // Check for the presence of props passed to the plugin syntax
           const unparsedProps = entry.match(propsRegEX);
@@ -90,10 +91,12 @@ const Parser = {
               .replace(/\w+:/g, (match) => (`"${match.split(':')[0]}":`))
               .replace(/'/g, '"');
 
-            props = JSON.parse(normalizedPropsString);
+            pluginProps = Object.assign({
+              pluginData: {}
+            }, JSON.parse(normalizedPropsString), pluginProps);
           }
 
-          pluginDataMap.push({ pluginId, ...props });
+          pluginDataMap.push({ pluginId, ...pluginProps });
         }
 
         // Require the React component and create a new React element with it
@@ -105,9 +108,8 @@ const Parser = {
             key: pluginId,
             pluginId,
             // Pass the mapPluginMarkdown to index the markdown content
-            setPluginData: this.mapPluginData,
-            isPreviewing
-          }, props)
+            setPluginData: this.mapPluginData
+          }, pluginProps)
         );
       });
     } else {
@@ -148,12 +150,14 @@ const Parser = {
 
       // The targetId can be either an object or array, deppending on the number of plugins
       // that sent data to be saved
-      if (typeof targetId.includes !== 'undefined') {
+      if (typeof targetId.push !== 'undefined') {
         isTarget = targetId.includes(pluginId);
         pluginValueIndex = targetId.indexOf(pluginId);
       } else {
         isTarget = pluginId === targetId;
       }
+
+      pluginDataMap[index].pluginData.isPluginUpdated = false;
 
       if (isTarget) {
         // Update the desired entry on the pluginData, indicated by the pluginData.key property
@@ -163,6 +167,7 @@ const Parser = {
         pluginData[pluginData.key] = newValue;
         // Remove the file from memory after updating the plugin data
         pluginData.file = null;
+        pluginData.isPluginUpdated = true;
         pluginDataMap[index].pluginData = pluginData;
       }
     });
