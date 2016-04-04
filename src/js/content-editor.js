@@ -13,13 +13,13 @@ export default class ContentEditor extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { isPreviewing: false };
+    this.state = { isPreviewing: false, isDataUpdated: false };
   }
 
   @autobind
   togglePreview() {
     const isPreviewing = !this.state.isPreviewing;
-    this.setState({ isPreviewing });
+    this.setState({ isPreviewing, isDataUpdated: false });
   }
 
   @autobind
@@ -31,23 +31,24 @@ export default class ContentEditor extends Component {
   @autobind
   saveData() {
     const pluginDataMap = Parser.getPluginData();
-    this.props.store.save(pluginDataMap)
-      .then(({ pluginId, path: value }) => Parser.updatePluginData({ pluginId, value }));
+
+    this.props.store.save({ rawData: pluginDataMap })
+      .then(({ pluginId, path: value }) => {
+        Parser.updatePluginData({ pluginId, value });
+        this.setState({ isDataUpdated: true });
+      });
   }
 
   render() {
     const { template: rawTemplate, componentsStyle: style } = this.props;
-    const { isPreviewing } = this.state;
-
     const template = rawTemplate.replace(/\n|(\s{1,}(?=<))/g, '');
-
     const editorElements = Parser.getChildrenNodes({
       template,
       style,
-      isPreviewing
+      props: this.state
     });
 
-    const className = `editor-wrapper${isPreviewing ? ' editor-wrapper--preview' : ''}`;
+    const className = `editor-wrapper${this.state.isPreviewing ? ' editor-wrapper--preview' : ''}`;
 
     return (
       <div className={className}>
