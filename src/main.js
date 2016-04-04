@@ -28,7 +28,7 @@ const template = `
 `;
 
 function saveData(data) {
-  console.info(data);
+  window.console.info(data);
 }
 
 const props = {

@@ -1,27 +1,28 @@
 const NO_DATA = 'No data to send';
 
-function httpSave({ data, normalizer, pluginId, config }) {
+function httpSave({ data, config }) {
   return new Promise((resolve, reject) => {
     if (data === null) reject({ cause: NO_DATA });
     const { endpoint, ...settings } = config;
     settings.body = data;
 
     fetch(endpoint, settings)
-      .then(normalizer)
-      .then((response) => {
-        const json = response;
-        json.pluginId = json.pluginId || pluginId;
-        resolve(json);
-      })
+      .then((response) => resolve(response))
       .catch(reject);
   });
 }
 
 function store(adapter) {
-  function save(rawData) {
-    const { save: { config, serializer, normalizer } } = adapter;
-    return serializer(rawData)
-      .then(({ data, pluginId }) => httpSave({ data, normalizer, pluginId, config }));
+  function save({ rawData }) {
+    const { save: { config, serialize, normalize } } = adapter;
+    return serialize(rawData)
+      .then(({ data, pluginIds }) => httpSave({ data, config })
+      .then(normalize)
+      .then((response) => {
+        const json = response;
+        json.pluginId = json.pluginId || pluginIds[0];
+        return json;
+      }));
   }
 
   return {

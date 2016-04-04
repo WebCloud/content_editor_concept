@@ -5,7 +5,7 @@ const headers = {
 
 export default {
   save: {
-    serializer(data) {
+    serialize(data) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -30,7 +30,7 @@ export default {
       });
     },
 
-    normalizer(response) {
+    normalize(response) {
       return new Promise((resolve, reject) => {
         const {
           path_lower: path
