@@ -9,19 +9,19 @@ const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}%?('|")?(,)?\s?){1,}\}/g
 // Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
 // function, in order to get the markdown content out of the Parser plugins
 const pluginDataMap = [];
+const mainNode = document.createElement('div');
 
 const Parser = {
   getChildrenNodes({ template, style, props }) {
     // Transform the template into a DOM tree in order to better transverse it
     // and transform it into React elements to be rendered into the screen
-
-    const node = document.createElement('div');
-    node.innerHTML = template;
-    const nodeId = '0';
+    if (mainNode.innerHTML.length === 0 || mainNode.innerHTML !== template) {
+      mainNode.innerHTML = template;
+    }
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
-    return this.parseNodes({ node, style, props, nodeId });
+    return this.parseNodes({ node: mainNode, style, props, nodeId: '0' });
   },
 
   parseNodes({ node: { childNodes = [] }, style, props, nodeId }) {
@@ -35,7 +35,7 @@ const Parser = {
         // Call extractPlugins to check for snippets for the plugin syntax.
         // Receive in return an array of node lists to be concatenated into our
         // current node list.
-        const textContent = node.textContent;
+        const { textContent } = node;
         nodeList = nodeList.concat(
           this.extractPlugins({ textContent, props, nodeId: childNodeId })
         );
