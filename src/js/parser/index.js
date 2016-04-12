@@ -6,22 +6,22 @@ const pluginRegEx = /\{content\.\w+(\s\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}%?('|"
 // RegEx for the plugin props part on the plugin syntax, using JSON-like values
 const propsRegEX = /\{(\w+:\s?('|")?\w+((-|_|\s)\w+){0,}%?('|")?(,)?\s?){1,}\}/g;
 
-// Object to be used as the this keyworkd on each new instance for the mapPluginMarkdown
+// Object to be used as the this keyword on each new instance for the mapPluginMarkdown
 // function, in order to get the markdown content out of the Parser plugins
 const pluginDataMap = [];
+const mainNode = document.createElement('div');
 
 const Parser = {
   getChildrenNodes({ template, style, props }) {
     // Transform the template into a DOM tree in order to better transverse it
     // and transform it into React elements to be rendered into the screen
-
-    const node = document.createElement('div');
-    node.innerHTML = template;
-    const nodeId = '0';
+    if (mainNode.innerHTML.length === 0 || mainNode.innerHTML !== template) {
+      mainNode.innerHTML = template;
+    }
 
     // Call parseNodes in order to transform the childNodes into React Elements
     // or into Parser plugin instances. Return the parsed nodes to be rendered.
-    return this.parseNodes({ node, style, props, nodeId });
+    return this.parseNodes({ node: mainNode, style, props, nodeId: '0' });
   },
 
   parseNodes({ node: { childNodes = [] }, style, props, nodeId }) {
@@ -29,13 +29,13 @@ const Parser = {
 
     childNodes.forEach((node, index) => {
       const childNodeId = `${nodeId}-${index}`;
-      // Ff the node has no tagName it indicates that it is a text, it could be
+      // If the node has no tagName it indicates that it is a text, it could be
       // just a text or a snippet for the plugin syntax e.g: {content.image ...}
       if (typeof node.tagName === 'undefined') {
         // Call extractPlugins to check for snippets for the plugin syntax.
         // Receive in return an array of node lists to be concatenated into our
         // current node list.
-        const textContent = node.textContent;
+        const { textContent } = node;
         nodeList = nodeList.concat(
           this.extractPlugins({ textContent, props, nodeId: childNodeId })
         );
@@ -44,7 +44,7 @@ const Parser = {
         const key = `${childNodeId}-${tagName}`;
         let childrenList = null;
 
-        // If we have childNodes call parseNodes on the node to keep trasversing
+        // If we have childNodes call parseNodes on the node to keep traversing
         // and parsing the tree. Receive the result into a array, childrenList
         if (node.hasChildNodes()) {
           childrenList = this.parseNodes({ node, props, nodeId: childNodeId });
@@ -148,7 +148,7 @@ const Parser = {
       let isTarget = false;
       let pluginValueIndex = null;
 
-      // The targetId can be either an object or array, deppending on the number of plugins
+      // The targetId can be either an object or array, depending on the number of plugins
       // that sent data to be saved
       if (typeof targetId.push !== 'undefined') {
         isTarget = targetId.includes(pluginId);
