@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "webpack -w",
+    "postinstall": "webpack",
     "server": "node server.js"
   },
   "author": "Vinicius Dallacqua",
